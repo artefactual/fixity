@@ -37,9 +37,12 @@ def parse_arguments():
 
 
 def fetch_environment_variables(namespace):
-    namespace.ss_url = os.environ['STORAGE_SERVICE_URL']
-    namespace.ss_port = os.environ.get('STORAGE_SERVICE_PORT', 8000)
-    namespace.drmc_url = os.environ['DRMC_URL']
+    try:
+        namespace.ss_url = os.environ['STORAGE_SERVICE_URL']
+        namespace.ss_port = os.environ.get('STORAGE_SERVICE_PORT', 8000)
+        namespace.drmc_url = os.environ['DRMC_URL']
+    except KeyError:
+        raise ArgumentError('Error: A required environment variable was not set')
 
 
 def main():
@@ -50,7 +53,10 @@ def main():
     except ArgumentError as e:
         return e
 
-    fetch_environment_variables(args)
+    try:
+        fetch_environment_variables(args)
+    except ArgumentError as e:
+        return e
     storage_service_connection = httplib.HTTPConnection(args.ss_url, args.ss_port)
 
     if args.command == 'scanall':

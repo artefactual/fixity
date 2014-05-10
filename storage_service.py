@@ -106,7 +106,7 @@ def scan_aip(aip_uuid, connection):
             session.commit()
 
     begun = datetime.now()
-    connection.request('GET', '/api/v2/file/' + aip.uuid + '/scan_fixity/')
+    connection.request('GET', '/api/v2/file/' + aip.uuid + '/check_fixity/')
     response = connection.getresponse()
     ended = datetime.now()
 

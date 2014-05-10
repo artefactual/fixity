@@ -28,7 +28,7 @@ def validate_arguments(args):
 def parse_arguments():
     parser = ArgumentParser()
     parser.add_argument('command')
-    parser.add_argument('aip', required=False)
+    parser.add_argument('aip', nargs='?')
     parser.add_argument('--throttle', type=int, default=0)
     args = parser.parse_args()
 

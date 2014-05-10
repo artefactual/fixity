@@ -117,7 +117,7 @@ def scan_aip(aip_uuid, connection):
         session.commit()
         raise StorageServiceError('A fixity scan could not be started for the AIP with uuid \"{}\"'.format(aip.uuid))
 
-    report_string = json.read()
+    report_string = response.read()
     report = json.loads(report_string)
     success = report.get('success', None)
 

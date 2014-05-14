@@ -137,7 +137,9 @@ def scan_aip(aip_uuid, connection):
         session.commit()
         raise StorageServiceError('A fixity scan could not be started for the AIP with uuid \"{}\"'.format(aip.uuid))
     if response.status == 500:
-        raise StorageServiceError('Storage service at \"{}\" encountered an internal error while scanning {}'.format(connection.host, aip.uuid))
+        create_report(aip, None, begun, ended, '{"success": null, "message": "Storage service returned 500"}')
+        session.commit()
+        raise StorageServiceError('Storage service at \"{}\" encountered an internal error while scanning AIP {}'.format(connection.host, aip.uuid))
 
     report_string = response.read()
     report = json.loads(report_string)

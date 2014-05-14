@@ -22,6 +22,7 @@ class Report(Base):
     begun = Column(DateTime)
     ended = Column(DateTime)
     success = Column(Boolean)
+    posted = Column(Boolean)
     report = Column(String(1000))
 
     aip = relationship("AIP", backref=backref('reports', order_by=id))

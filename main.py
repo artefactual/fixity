@@ -1,10 +1,11 @@
 from __future__ import print_function
 from argparse import ArgumentParser
+import json
 import httplib
 import os
 import sys
 
-from models import AIP, Session
+from models import AIP, Report, Session
 import storage_service
 
 
@@ -50,6 +51,26 @@ def scan_message(aip_uuid, status):
     return "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
 
 
+def post_report(aip, report, connection):
+    body = report.report
+    headers = {
+        "Content-Type": "application/json"
+    }
+    url = 'api/fixityreports/{}'.format(aip)
+    connection.request('POST', url, body, headers)
+
+    response = connection.getresponse()
+
+    session = Session()
+    if not response.status == 201:
+        report.posted = False
+    else:
+        report.posted = True
+
+    session.commit()
+    return report.posted
+
+
 def scan(aip, storage_service_connection, report_connection=None):
     # Ensure the storage service knows about this AIP first;
     # get_single_aip() will raise an exception if the storage service
@@ -57,13 +78,22 @@ def scan(aip, storage_service_connection, report_connection=None):
     # while attempting to respond to the request.
     storage_service.get_single_aip(aip, storage_service_connection)
     try:
-        status, _ = storage_service.scan_aip(aip, storage_service_connection)
+        status, report = storage_service.scan_aip(aip, storage_service_connection)
         print(scan_message(aip, status), file=sys.stderr)
     except (storage_service.StorageServiceError, storage_service.InvalidUUID) as e:
         print(e.message, file=sys.stderr)
         status = None
-        if hasattr(e, 'report') and e.report and report_connection:
-            pass
+        if hasattr(e, 'report') and e.report:
+            report = e.report
+        # Certain classes of exceptions will not return reports because no
+        # scan was even attempted; nothing to POST in that case.
+        else:
+            report = None
+
+    if report_connection and report:
+        if not post_report(aip, report, report_connection):
+            print("Unable to POST report for AIP {} to remote service".format(aip),
+                  file=sys.stderr)
 
     return status
 

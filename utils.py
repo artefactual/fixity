@@ -8,5 +8,8 @@ def check_valid_uuid(uuid):
     This uses the UUID() class constructor from the uuid module,
     which raises a ValueError if the passed string is not a valid UUID.
     """
+    if not isinstance(uuid, basestring):
+        raise TypeError("UUID must be a string")
+
     UUID(uuid)
     return True

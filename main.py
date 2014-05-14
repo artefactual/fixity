@@ -57,7 +57,11 @@ def post_report(aip, report, connection):
         "Content-Type": "application/json"
     }
     url = 'api/fixityreports/{}'.format(aip)
-    connection.request('POST', url, body, headers)
+
+    try:
+        connection.request('POST', url, body, headers)
+    except:
+        return False
 
     response = connection.getresponse()
 

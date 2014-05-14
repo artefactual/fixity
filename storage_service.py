@@ -113,8 +113,8 @@ def scan_aip(aip_uuid, connection):
     success is a trilean that returns True or False for success or failure,
     and None if the scan could not begin.
 
-    report is a dict containing the parsed JSON report from the storage
-    service.
+    report is a Report model object, which typically has already been committed
+    to the database.
 
     If the storage service returns a 404, raises a StorageServiceError.
     A report is still saved to the database in this case.
@@ -157,7 +157,7 @@ def scan_aip(aip_uuid, connection):
             report=report
         )
     if response.status == 500:
-        create_report(aip, None, begun, ended, '{"success": null, "message": "Storage service returned 500"}')
+        report = create_report(aip, None, begun, ended, '{"success": null, "message": "Storage service returned 500"}')
         session.commit()
         raise StorageServiceError(
             'Storage service at \"{}\" encountered an internal error while scanning AIP {}'.format(connection.host, aip.uuid),
@@ -167,7 +167,7 @@ def scan_aip(aip_uuid, connection):
     success = report.get('success', None)
     report_string = json.dumps(report)
 
-    create_report(aip, success, begun, ended, report_string)
+    report_object = create_report(aip, success, begun, ended, report_string)
     session.commit()
 
-    return (success, report)
+    return (success, report_object)

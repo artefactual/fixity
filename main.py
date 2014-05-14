@@ -129,6 +129,8 @@ def main():
         status = scanall(storage_service_connection, report_connection)
     elif args.command == 'scan':
         status = scan(args.aip, storage_service_connection, report_connection)
+    else:
+        return Exception('Error: "{}" is not a valid command.'.format(args.command))
 
     if not status:
         success = 1

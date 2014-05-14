@@ -50,6 +50,36 @@ def scan_message(aip_uuid, status):
     return "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
 
 
+def scan(aip, storage_service_connection, report_connection=None):
+    # Ensure the storage service knows about this AIP first;
+    # get_single_aip() will raise an exception if the storage service
+    # does not have an AIP with that UUID, or otherwise errors out
+    # while attempting to respond to the request.
+    storage_service.get_single_aip(aip, storage_service_connection)
+    try:
+        status, _ = storage_service.scan_aip(aip, storage_service_connection)
+        print(scan_message(aip, status), file=sys.stderr)
+    except (storage_service.StorageServiceError, storage_service.InvalidUUID) as e:
+        print(e.message, file=sys.stderr)
+        status = None
+        if hasattr(e, 'report') and e.report and report_connection:
+            pass
+
+    return status
+
+
+def scanall(storage_service_connection, report_connection=None):
+    success = True
+
+    aips = storage_service.get_all_aips(storage_service_connection)
+    for aip in aips:
+        scan_success = scan(aip['uuid'], storage_service, report_connection)
+        if not scan_success:
+            success = False
+
+    return success
+
+
 def main():
     success = 0
 
@@ -63,33 +93,15 @@ def main():
     except ArgumentError as e:
         return e
     storage_service_connection = httplib.HTTPConnection(args.ss_url, args.ss_port)
+    report_connection = httplib.HTTPConnection(args.drmc_url)
 
     if args.command == 'scanall':
-        aips = storage_service.get_all_aips(storage_service_connection)
-        for aip in aips:
-            try:
-                status, _ = storage_service.scan_aip(aip['uuid'], storage_service_connection)
-                print(scan_message(aip['uuid'], status), file=sys.stderr)
-
-                if not status:
-                    success = 1
-            except storage_service.StorageServiceError as e:
-                success = 1
-                print(e.message, file=sys.stderr)
-                continue
+        status = scanall(storage_service_connection, report_connection)
     elif args.command == 'scan':
-        # Ensure the storage service knows about this AIP first;
-        # get_single_aip() will raise an exception if the storage service
-        # does not have an AIP with that UUID.
-        try:
-            storage_service.get_single_aip(args.aip, storage_service_connection)
-            status, _ = storage_service.scan_aip(args.aip, storage_service_connection)
-            print(scan_message(args.aip, status), file=sys.stderr)
+        status = scan(args.aip, storage_service_connection, report_connection)
 
-            if not status:
-                success = 1
-        except (storage_service.StorageServiceError, storage_service.InvalidUUID) as e:
-            return e
+    if not status:
+        success = 1
 
     return success
 

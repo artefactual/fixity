@@ -11,7 +11,17 @@ from utils import check_valid_uuid
 
 
 class StorageServiceError(Exception):
-    pass
+    """
+    Subclass of Exception used to report errors from the storage service.
+
+    The report keyword argument should be used to pass in a JSON report from
+    functions that scan the storage service in the case that the function
+    itself will not return, but the caller still needs access to it.
+    """
+
+    def __init__(self, message, report=None):
+        self.report = report
+        super(StorageServiceError, self).__init__(message)
 
 
 class InvalidUUID(Exception):
@@ -140,13 +150,19 @@ def scan_aip(aip_uuid, connection):
     # Typically occurs if the storage service is unable to find the
     # requested AIP, or if the requested API call is not available.
     if response.status == 404:
-        create_report(aip, None, begun, ended, '{"success": null, "message": "Storage service returned 404"}')
+        report = create_report(aip, None, begun, ended, '{"success": null, "message": "Storage service returned 404"}')
         session.commit()
-        raise StorageServiceError('A fixity scan could not be started for the AIP with uuid \"{}\"'.format(aip.uuid))
+        raise StorageServiceError(
+            'A fixity scan could not be started for the AIP with uuid \"{}\"'.format(aip.uuid),
+            report=report
+        )
     if response.status == 500:
         create_report(aip, None, begun, ended, '{"success": null, "message": "Storage service returned 500"}')
         session.commit()
-        raise StorageServiceError('Storage service at \"{}\" encountered an internal error while scanning AIP {}'.format(connection.host, aip.uuid))
+        raise StorageServiceError(
+            'Storage service at \"{}\" encountered an internal error while scanning AIP {}'.format(connection.host, aip.uuid),
+            report=report
+        )
 
     success = report.get('success', None)
     report_string = json.dumps(report)

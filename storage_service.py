@@ -1,6 +1,7 @@
 from datetime import datetime
 import httplib
 import json
+import time
 import urllib
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -125,10 +126,16 @@ def scan_aip(aip_uuid, connection):
             aip = AIP(uuid=aip_uuid)
             session.commit()
 
-    begun = datetime.now()
+    begun = datetime.utcnow()
     connection.request('GET', '/api/v2/file/' + aip.uuid + '/check_fixity/')
     response = connection.getresponse()
-    ended = datetime.now()
+    ended = datetime.utcnow()
+
+    report = json.load(response)
+    report["started"] = int(time.mktime(begun.utctimetuple()))
+    report["finished"] = int(time.mktime(ended.utctimetuple()))
+    if not "success" in report:
+        report["success"] = None
 
     # Typically occurs if the storage service is unable to find the
     # requested AIP, or if the requested API call is not available.
@@ -141,9 +148,8 @@ def scan_aip(aip_uuid, connection):
         session.commit()
         raise StorageServiceError('Storage service at \"{}\" encountered an internal error while scanning AIP {}'.format(connection.host, aip.uuid))
 
-    report_string = response.read()
-    report = json.loads(report_string)
     success = report.get('success', None)
+    report_string = json.dumps(report)
 
     create_report(aip, success, begun, ended, report_string)
     session.commit()

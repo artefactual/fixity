@@ -38,6 +38,8 @@ def get_all_aips(connection):
     response = connection.getresponse()
     if response.status == 404:
         raise StorageServiceError('Storage service at \"{}\" returned 404'.format(connection.host))
+    if response.status == 500:
+        raise StorageServiceError('Storage service at \"{}\" encountered an internal error while requesting AIPs'.format(connection.host))
     results = json.load(response)
     limit = results['meta']['limit']
     count = results['meta']['limit']
@@ -72,6 +74,8 @@ def get_single_aip(uuid, connection):
     response = connection.getresponse()
     if response.status == 404:
         raise StorageServiceError('Storage service at \"{}\" returned 404'.format(connection.host))
+    if response.status == 500:
+        raise StorageServiceError('Storage service at \"{}\" encountered an internal error while requesting aip'.format(connection.host, uuid))
     return json.load(response)
 
 
@@ -132,6 +136,8 @@ def scan_aip(aip_uuid, connection):
         create_report(aip, None, begun, ended, '{"success": null, "message": "Storage service returned 404"}')
         session.commit()
         raise StorageServiceError('A fixity scan could not be started for the AIP with uuid \"{}\"'.format(aip.uuid))
+    if response.status == 500:
+        raise StorageServiceError('Storage service at \"{}\" encountered an internal error while scanning {}'.format(connection.host, aip.uuid))
 
     report_string = response.read()
     report = json.loads(report_string)

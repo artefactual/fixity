@@ -45,6 +45,11 @@ def fetch_environment_variables(namespace):
         raise ArgumentError('Error: A required environment variable was not set')
 
 
+def scan_message(aip_uuid, status):
+    succeeded = "succeeded" if status else "failed"
+    return "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
+
+
 def main():
     success = 0
 
@@ -64,14 +69,13 @@ def main():
         for aip in aips:
             try:
                 status, _ = storage_service.scan_aip(aip['uuid'], storage_service_connection)
-                succeeded = "succeeded" if status else "failed"
-                print("Fixity scan", succeeded, "for AIP:", aip['uuid'], file=sys.stderr)
+                print(scan_message(aip['uuid'], status), file=sys.stderr)
 
                 if not status:
                     success = 1
-            except storage_service.StorageServiceError:
+            except storage_service.StorageServiceError as e:
                 success = 1
-                print('Requested AIP \"{}\" not present on storage service'.format(aip), file=sys.stderr)
+                print(e.message, file=sys.stderr)
                 continue
     elif args.command == 'scan':
         # Ensure the storage service knows about this AIP first;
@@ -80,12 +84,11 @@ def main():
         try:
             storage_service.get_single_aip(args.aip, storage_service_connection)
             status, _ = storage_service.scan_aip(args.aip, storage_service_connection)
+            print(scan_message(args.aip, status), file=sys.stderr)
 
             if not status:
                 success = 1
-        except storage_service.StorageServiceError:
-            return Exception('Requested AIP \"{}\" not present on storage service'.format(args.aip))
-        except storage_service.InvalidUUID as e:
+        except (storage_service.StorageServiceError, storage_service.InvalidUUID) as e:
             return e
 
     return success

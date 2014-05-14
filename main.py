@@ -63,7 +63,12 @@ def main():
         aips = storage_service.get_all_aips(storage_service_connection)
         for aip in aips:
             try:
-                storage_service.scan_aip(aip, storage_service_connection)
+                status, _ = storage_service.scan_aip(aip['uuid'], storage_service_connection)
+                succeeded = "succeeded" if status else "failed"
+                print("Fixity scan", succeeded, "for AIP:", aip['uuid'], file=sys.stderr)
+
+                if not status:
+                    success = 1
             except storage_service.StorageServiceError:
                 success = 1
                 print('Requested AIP \"{}\" not present on storage service'.format(aip), file=sys.stderr)
@@ -74,7 +79,10 @@ def main():
         # does not have an AIP with that UUID.
         try:
             storage_service.get_single_aip(args.aip, storage_service_connection)
-            storage_service.scan_aip(args.aip, storage_service_connection)
+            status, _ = storage_service.scan_aip(args.aip, storage_service_connection)
+
+            if not status:
+                success = 1
         except storage_service.StorageServiceError:
             return Exception('Requested AIP \"{}\" not present on storage service'.format(args.aip))
         except storage_service.InvalidUUID as e:

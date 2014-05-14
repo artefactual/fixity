@@ -102,10 +102,14 @@ def scanall(storage_service_connection, report_connection=None):
     success = True
 
     aips = storage_service.get_all_aips(storage_service_connection)
+    count = len(aips)
     for aip in aips:
         scan_success = scan(aip['uuid'], storage_service, report_connection)
         if not scan_success:
             success = False
+
+    if count > 0:
+        print("Successfully scanned", count, "AIPs", file=sys.stderr)
 
     return success
 

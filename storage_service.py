@@ -13,6 +13,14 @@ class StorageServiceError(Exception):
     pass
 
 
+class InvalidUUID(Exception):
+    def __init__(self, uuid):
+        self.message = "Invalid UUID: {}".format(uuid)
+
+    def __str__(self):
+        return self.message
+
+
 def get_all_aips(connection):
     """
     Returns a list of all AIPs stored in a storage service installation.
@@ -55,7 +63,11 @@ def get_single_aip(uuid, connection):
     Given an AIP UUID, fetches a dict with full information on the AIP
     from the storage service.
     """
-    check_valid_uuid(uuid)  # raises if not a valid UUID
+    try:
+        check_valid_uuid(uuid)
+    except ValueError:
+        raise InvalidUUID(uuid)
+
     connection.request('GET', '/api/v2/file/' + uuid + '/')
     response = connection.getresponse()
     if response.status == 404:
@@ -98,7 +110,11 @@ def scan_aip(aip_uuid, connection):
     if isinstance(aip_uuid, AIP):
         aip = aip_uuid
     else:
-        check_valid_uuid(aip_uuid)
+        try:
+            check_valid_uuid(aip_uuid)
+        except ValueError:
+            raise InvalidUUID(aip_uuid)
+
         try:
             aip = session.query(AIP).filter_by(uuid=aip_uuid).one()
         except NoResultFound:

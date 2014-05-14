@@ -77,6 +77,8 @@ def main():
             storage_service.scan_aip(args.aip, storage_service_connection)
         except storage_service.StorageServiceError:
             return Exception('Requested AIP \"{}\" not present on storage service'.format(args.aip))
+        except storage_service.InvalidUUID as e:
+            return e
 
     return success
 

@@ -21,7 +21,7 @@ def store_aips_in_database(aips):
     session = Session()
     for aip in aips:
         if session.query(AIP.uuid).filter_by(uuid=aip['uuid']).count() == 0:
-            AIP(uuid=aip['uuid'])
+            session.add(AIP(uuid=aip['uuid']))
     session.commit()
 
 
@@ -82,6 +82,7 @@ def post_report(aip, report, report_url):
     else:
         report.posted = True
 
+    session.add(report)
     session.commit()
     return report.posted
 

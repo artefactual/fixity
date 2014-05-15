@@ -126,7 +126,7 @@ def scan_aip(aip_uuid, ss_url):
             aip = session.query(AIP).filter_by(uuid=aip_uuid).one()
         except NoResultFound:
             aip = AIP(uuid=aip_uuid)
-            session.commit()
+            session.add(aip)
 
     begun = datetime.utcnow()
     response = requests.get(ss_url + 'api/v2/file/' + aip.uuid + '/check_fixity/')
@@ -142,6 +142,7 @@ def scan_aip(aip_uuid, ss_url):
     # requested AIP, or if the requested API call is not available.
     if response.status_code == 404:
         report = create_report(aip, None, begun, ended, '{"success": null, "message": "Storage service returned 404"}')
+        session.add(report)
         session.commit()
         raise StorageServiceError(
             'A fixity scan could not be started for the AIP with uuid \"{}\"'.format(aip.uuid),
@@ -149,6 +150,7 @@ def scan_aip(aip_uuid, ss_url):
         )
     if response.status_code == 500:
         report = create_report(aip, None, begun, ended, '{"success": null, "message": "Storage service returned 500"}')
+        session.add(report)
         session.commit()
         raise StorageServiceError(
             'Storage service at \"{}\" encountered an internal error while scanning AIP {}'.format(ss_url, aip.uuid),
@@ -159,6 +161,7 @@ def scan_aip(aip_uuid, ss_url):
     report_string = json.dumps(report)
 
     report_object = create_report(aip, success, begun, ended, report_string)
+    session.add(report_object)
     session.commit()
 
     return (success, report_object)

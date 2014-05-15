@@ -1,7 +1,6 @@
 from datetime import datetime
 import json
 import time
-import urllib
 
 import requests
 from sqlalchemy.orm.exc import NoResultFound
@@ -52,8 +51,8 @@ def get_all_aips(ss_url):
     aips = [aip for aip in results['objects'] if aip['package_type'] == 'AIP']
 
     while count < results['meta']['total_count']:
-        params = urllib.urlencode({'count': count + limit})
-        response = requests.get(url, parmas=params)
+        params = {'count': str(count + limit)}
+        response = requests.get(url, params=params)
 
         results = response.json()
         count += limit

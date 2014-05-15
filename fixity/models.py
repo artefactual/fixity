@@ -3,7 +3,7 @@ from sqlalchemy import Column, ForeignKey, Boolean, DateTime, Integer, String
 from sqlalchemy.orm import relationship, backref, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-engine = create_engine('sqlite:///:memory', echo=True)
+engine = create_engine('sqlite:///fixity/fixity.db', echo=True)
 
 Session = sessionmaker(bind=engine)
 Base = declarative_base()

@@ -1,0 +1,43 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate, compress']
+      User-Agent: [python-requests/2.2.1 CPython/2.7.3 Linux/3.2.0-61-generic]
+    method: GET
+    uri: http://localhost:8000/api/v2/file/a7f2a05b-0fdf-42f1-a46c-4522a831cf17/
+  response:
+    body: {string: !!python/unicode '{"error_message": "no such column: locations_package.misc_attributes",
+        "traceback": "Traceback (most recent call last):\n\n  File \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/tastypie/resources.py\",
+        line 217, in wrapper\n    response = callback(request, *args, **kwargs)\n\n  File
+        \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/tastypie/resources.py\",
+        line 468, in dispatch_detail\n    return self.dispatch(''detail'', request,
+        **kwargs)\n\n  File \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/tastypie/resources.py\",
+        line 491, in dispatch\n    response = method(request, **kwargs)\n\n  File
+        \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/tastypie/resources.py\",
+        line 1328, in get_detail\n    obj = self.cached_obj_get(bundle=basic_bundle,
+        **self.remove_api_resource_names(kwargs))\n\n  File \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/tastypie/resources.py\",
+        line 1146, in cached_obj_get\n    cached_bundle = self.obj_get(bundle=bundle,
+        **kwargs)\n\n  File \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/tastypie/resources.py\",
+        line 2128, in obj_get\n    if len(object_list) <= 0:\n\n  File \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/django/db/models/query.py\",
+        line 106, in __len__\n    self._result_cache = list(self.iterator())\n\n  File
+        \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/django/db/models/query.py\",
+        line 317, in iterator\n    for row in compiler.results_iter():\n\n  File \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/django/db/models/sql/compiler.py\",
+        line 775, in results_iter\n    for rows in self.execute_sql(MULTI):\n\n  File
+        \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/django/db/models/sql/compiler.py\",
+        line 840, in execute_sql\n    cursor.execute(sql, params)\n\n  File \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/django/db/backends/util.py\",
+        line 41, in execute\n    return self.cursor.execute(sql, params)\n\n  File
+        \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/django/db/backends/sqlite3/base.py\",
+        line 366, in execute\n    six.reraise(utils.DatabaseError, utils.DatabaseError(*tuple(e.args)),
+        sys.exc_info()[2])\n\n  File \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/django/db/backends/sqlite3/base.py\",
+        line 362, in execute\n    return Database.Cursor.execute(self, query, params)\n\nDatabaseError:
+        no such column: locations_package.misc_attributes\n"}'}
+    headers:
+      content-type: [application/json]
+      date: ['Thu, 15 May 2014 21:43:12 GMT']
+      server: [WSGIServer/0.1 Python/2.7.3]
+      vary: [Cookie]
+      x-frame-options: [SAMEORIGIN]
+    status: {code: 500, message: INTERNAL SERVER ERROR}
+version: 1

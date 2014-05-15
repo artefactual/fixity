@@ -1,0 +1,24 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate, compress']
+      User-Agent: [python-requests/2.2.1 CPython/2.7.3 Linux/3.2.0-61-generic]
+    method: GET
+    uri: http://localhost:8000/api/v2/file/a7f2a05b-0fdf-42f1-a46c-4522a831cf17/check_fixity/
+  response:
+    body: {string: !!python/unicode '{"error_message": "global name ''foo'' is not
+        defined", "traceback": "Traceback (most recent call last):\n\n  File \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/tastypie/resources.py\",
+        line 217, in wrapper\n    response = callback(request, *args, **kwargs)\n\n  File
+        \"/home/mistydemeo/artefactual/archivematica-storage-service/storage_service/locations/api/resources.py\",
+        line 515, in check_fixity_request\n    foo\n\nNameError: global name ''foo''
+        is not defined\n"}'}
+    headers:
+      content-type: [application/json]
+      date: ['Thu, 15 May 2014 22:05:38 GMT']
+      server: [WSGIServer/0.1 Python/2.7.3]
+      vary: [Cookie]
+      x-frame-options: [SAMEORIGIN]
+    status: {code: 500, message: INTERNAL SERVER ERROR}
+version: 1

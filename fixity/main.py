@@ -14,6 +14,9 @@ class ArgumentError(Exception):
 
 
 def store_aips_in_database(aips):
+    """
+    Add new AIPs to the database from a list of AIP UUID strings.
+    """
     session = Session()
     for aip in aips:
         if session.query(AIP.uuid).filter_by(uuid=aip['uuid']).count() == 0:
@@ -52,6 +55,14 @@ def scan_message(aip_uuid, status):
 
 
 def post_report(aip, report, connection):
+    """
+    POST a JSON fixity scan report to a remote system.
+
+    aip should be the UUID of an AIP as a string.
+    report should be a Report instance.
+    connection should be an active HTTPConnection instance connected to the
+    remote system to which the report will be POSTed.
+    """
     body = report.report
     headers = {
         "Content-Type": "application/json"
@@ -76,6 +87,21 @@ def post_report(aip, report, connection):
 
 
 def scan(aip, storage_service_connection, report_connection=None):
+    """
+    Instruct the storage service to scan a single AIP.
+
+    This first attempts to query the storage service about the AIP,
+    to ensure the storage service still has a record of it, then
+    runs a fixity scan.
+
+    aip should be an AIP UUID string.
+    storage_service_connection should be an active HTTPConnection pointed
+    at a storage service installation.
+    report_connection can be an HTTPConnection pointed at a server to which
+    the report results should be POSTed. If absent, the report will not be
+    transmitted.
+    """
+
     # Ensure the storage service knows about this AIP first;
     # get_single_aip() will raise an exception if the storage service
     # does not have an AIP with that UUID, or otherwise errors out
@@ -103,6 +129,15 @@ def scan(aip, storage_service_connection, report_connection=None):
 
 
 def scanall(storage_service_connection, report_connection=None):
+    """
+    Run a fixity scan on every AIP in a storage service instance.
+
+    storage_service_connection should be an active HTTPConnection pointed
+    at a storage service installation.
+    report_connection can be an HTTPConnection pointed at a server to which
+    the report results should be POSTed. If absent, the report will not be
+    transmitted.
+    """
     success = True
 
     aips = storage_service.get_all_aips(storage_service_connection)

@@ -1,12 +1,13 @@
 from __future__ import print_function
 from argparse import ArgumentParser
 import json
-import httplib
 import os
 import sys
 
 from models import AIP, Report, Session
 import storage_service
+
+import requests
 
 
 class ArgumentError(Exception):
@@ -43,7 +44,8 @@ def parse_arguments():
 def fetch_environment_variables(namespace):
     try:
         namespace.ss_url = os.environ['STORAGE_SERVICE_URL']
-        namespace.ss_port = os.environ.get('STORAGE_SERVICE_PORT', 8000)
+        if not namespace.ss_url.endswith('/'):
+            namespace.ss_url = namespace.ss_url + '/'
         namespace.drmc_url = os.environ['DRMC_URL']
     except KeyError:
         raise ArgumentError('Error: A required environment variable was not set')
@@ -54,30 +56,28 @@ def scan_message(aip_uuid, status):
     return "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
 
 
-def post_report(aip, report, connection):
+def post_report(aip, report, report_url):
     """
     POST a JSON fixity scan report to a remote system.
 
     aip should be the UUID of an AIP as a string.
     report should be a Report instance.
-    connection should be an active HTTPConnection instance connected to the
-    remote system to which the report will be POSTed.
+    report_url should be the base URL for the system to which the request
+    will be POSTed.
     """
     body = report.report
     headers = {
         "Content-Type": "application/json"
     }
-    url = 'api/fixityreports/{}'.format(aip)
+    url = report_url + 'api/fixityreports/{}'.format(aip)
 
     try:
-        connection.request('POST', url, body, headers)
-    except:
+        response = requests.post(url, data=body, headers=headers)
+    except requests.ConnectionError:
         return False
 
-    response = connection.getresponse()
-
     session = Session()
-    if not response.status == 201:
+    if not response.status_code == 201:
         report.posted = False
     else:
         report.posted = True
@@ -86,7 +86,7 @@ def post_report(aip, report, connection):
     return report.posted
 
 
-def scan(aip, storage_service_connection, report_connection=None):
+def scan(aip, ss_url, report_url=None):
     """
     Instruct the storage service to scan a single AIP.
 
@@ -95,10 +95,9 @@ def scan(aip, storage_service_connection, report_connection=None):
     runs a fixity scan.
 
     aip should be an AIP UUID string.
-    storage_service_connection should be an active HTTPConnection pointed
-    at a storage service installation.
-    report_connection can be an HTTPConnection pointed at a server to which
-    the report results should be POSTed. If absent, the report will not be
+    ss_url should be the base URL to a storage service installation.
+    report_url can be the base URL to a server to which the report will
+    be POSTed after the scan completes. If absent, the report will not be
     transmitted.
     """
 
@@ -106,9 +105,9 @@ def scan(aip, storage_service_connection, report_connection=None):
     # get_single_aip() will raise an exception if the storage service
     # does not have an AIP with that UUID, or otherwise errors out
     # while attempting to respond to the request.
-    storage_service.get_single_aip(aip, storage_service_connection)
+    storage_service.get_single_aip(aip, ss_url)
     try:
-        status, report = storage_service.scan_aip(aip, storage_service_connection)
+        status, report = storage_service.scan_aip(aip, ss_url)
         print(scan_message(aip, status), file=sys.stderr)
     except (storage_service.StorageServiceError, storage_service.InvalidUUID) as e:
         print(e.message, file=sys.stderr)
@@ -120,30 +119,29 @@ def scan(aip, storage_service_connection, report_connection=None):
         else:
             report = None
 
-    if report_connection and report:
-        if not post_report(aip, report, report_connection):
+    if report_url and report:
+        if not post_report(aip, report, report_url):
             print("Unable to POST report for AIP {} to remote service".format(aip),
                   file=sys.stderr)
 
     return status
 
 
-def scanall(storage_service_connection, report_connection=None):
+def scanall(ss_url, report_url=None):
     """
     Run a fixity scan on every AIP in a storage service instance.
 
-    storage_service_connection should be an active HTTPConnection pointed
-    at a storage service installation.
-    report_connection can be an HTTPConnection pointed at a server to which
-    the report results should be POSTed. If absent, the report will not be
+    ss_url should be the base URL to a storage service installation.
+    report_url can be the base URL to a server to which the report will
+    be POSTed after the scan completes. If absent, the report will not be
     transmitted.
     """
     success = True
 
-    aips = storage_service.get_all_aips(storage_service_connection)
+    aips = storage_service.get_all_aips(ss_url)
     count = len(aips)
     for aip in aips:
-        scan_success = scan(aip['uuid'], storage_service_connection, report_connection)
+        scan_success = scan(aip['uuid'], ss_url, report_url)
         if not scan_success:
             success = False
 
@@ -165,13 +163,11 @@ def main():
         fetch_environment_variables(args)
     except ArgumentError as e:
         return e
-    storage_service_connection = httplib.HTTPConnection(args.ss_url, args.ss_port)
-    report_connection = httplib.HTTPConnection(args.drmc_url)
 
     if args.command == 'scanall':
-        status = scanall(storage_service_connection, report_connection)
+        status = scanall(args.ss_url, args.drmc_url)
     elif args.command == 'scan':
-        status = scan(args.aip, storage_service_connection, report_connection)
+        status = scan(args.ss_url, args.drmc_url)
     else:
         return Exception('Error: "{}" is not a valid command.'.format(args.command))
 

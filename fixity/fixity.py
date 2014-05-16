@@ -4,9 +4,8 @@ import os
 import sys
 
 from models import AIP, Session
+from reporting import post_report
 import storage_service
-
-import requests
 
 
 class ArgumentError(Exception):
@@ -53,37 +52,6 @@ def fetch_environment_variables(namespace):
 def scan_message(aip_uuid, status):
     succeeded = "succeeded" if status else "failed"
     return "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
-
-
-def post_report(aip, report, report_url):
-    """
-    POST a JSON fixity scan report to a remote system.
-
-    aip should be the UUID of an AIP as a string.
-    report should be a Report instance.
-    report_url should be the base URL for the system to which the request
-    will be POSTed.
-    """
-    body = report.report
-    headers = {
-        "Content-Type": "application/json"
-    }
-    url = report_url + 'api/fixityreports/{}'.format(aip)
-
-    try:
-        response = requests.post(url, data=body, headers=headers)
-    except requests.ConnectionError:
-        return False
-
-    session = Session()
-    if not response.status_code == 201:
-        report.posted = False
-    else:
-        report.posted = True
-
-    session.add(report)
-    session.commit()
-    return report.posted
 
 
 def scan(aip, ss_url, report_url=None):

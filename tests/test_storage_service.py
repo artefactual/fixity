@@ -9,23 +9,14 @@ import vcr
 STORAGE_SERVICE_URL = 'http://localhost:8000/'
 
 
+### Single AIP
+
 @vcr.use_cassette('fixtures/vcr_cassettes/single_aip.yaml')
 def test_get_single_aip():
     aip_uuid = 'a7f2a05b-0fdf-42f1-a46c-4522a831cf17'
     aip = storage_service.get_single_aip(aip_uuid, STORAGE_SERVICE_URL)
     assert type(aip) == dict
     assert aip['uuid'] == aip_uuid
-
-
-@vcr.use_cassette('fixtures/vcr_cassettes/all_aips.yaml')
-def test_get_all_aips():
-    aip_uuids = ('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', 'c8ebb75e-6b7a-46dd-a360-91d3753d7b72')
-
-    aips = storage_service.get_all_aips(STORAGE_SERVICE_URL)
-    assert len(aips) == 2
-    for aip in aips:
-        assert type(aip) == dict
-        assert aip['uuid'] in aip_uuids
 
 
 @vcr.use_cassette('fixtures/vcr_cassettes/single_aip_404.yaml')
@@ -58,6 +49,19 @@ def test_single_aip_raises_with_invalid_url():
     assert "Unable to connect" in ex.value.message
 
 
+### All AIPs
+
+@vcr.use_cassette('fixtures/vcr_cassettes/all_aips.yaml')
+def test_get_all_aips():
+    aip_uuids = ('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', 'c8ebb75e-6b7a-46dd-a360-91d3753d7b72')
+
+    aips = storage_service.get_all_aips(STORAGE_SERVICE_URL)
+    assert len(aips) == 2
+    for aip in aips:
+        assert type(aip) == dict
+        assert aip['uuid'] in aip_uuids
+
+
 @vcr.use_cassette('fixtures/vcr_cassettes/all_aips_500.yaml')
 def test_get_all_aips_raises_on_500():
     with pytest.raises(storage_service.StorageServiceError) as ex:
@@ -73,6 +77,8 @@ def test_get_all_aips_raises_with_invalid_url():
 
     assert "Unable to connect" in ex.value.message
 
+
+### Fixity scan
 
 @vcr.use_cassette('fixtures/vcr_cassettes/fixity_success.yaml')
 def test_successful_fixity_scan():

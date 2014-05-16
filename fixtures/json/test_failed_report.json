@@ -1,0 +1,33 @@
+{
+  "success": false,
+  "message": "invalid bag",
+  "failures": {
+    "files": {
+      "missing": [
+        {
+          "message": "data/objects/no_such_file exists in manifest but not found on filesystem",
+          "path": "data/objects/no_such_file"
+        }
+      ],
+      "changed": [
+        {
+          "hash_type": "md5",
+          "actual": "38a7fce00127fe8a9415fd7cb9af0499",
+          "message": "manifest-sha512.txt checksum validation failed (alg=md5 expected=87c03839071596c9948b60bb7d90dc69 found=38a7fce00127fe8a9415fd7cb9af0499)",
+          "path": "manifest-sha512.txt",
+          "expected": "87c03839071596c9948b60bb7d90dc69"
+        },
+        {
+          "hash_type": "sha512",
+          "actual": "1325e2a0299104e309a725b09e2880962158ac682ef04ff91d3686aac7dd5784ada8b74135020b87a5e464b1b2d307d9da50f47aac78b4e53f89a7108255d076",
+          "message": "data/objects/smaufrai.bmp checksum validation failed (alg=sha512 expected=2325e2a0299104e309a725b09e2880962158ac682ef04ff91d3686aac7dd5784ada8b74135020b87a5e464b1b2d307d9da50f47aac78b4e53f89a7108255d076 found=1325e2a0299104e309a725b09e2880962158ac682ef04ff91d3686aac7dd5784ada8b74135020b87a5e464b1b2d307d9da50f47aac78b4e53f89a7108255d076)",
+          "path": "data/objects/smaufrai.bmp",
+          "expected": "2325e2a0299104e309a725b09e2880962158ac682ef04ff91d3686aac7dd5784ada8b74135020b87a5e464b1b2d307d9da50f47aac78b4e53f89a7108255d076"
+        }
+      ],
+      "untracked": []
+    }
+  },
+  "started": 1400022946,
+  "finished": 1400023208
+}

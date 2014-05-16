@@ -9,6 +9,9 @@ from models import AIP, Report, Session
 from utils import check_valid_uuid
 
 
+UNABLE_TO_CONNECT_ERROR = "Unable to connect to storage service instance at {} (is it running?)"
+
+
 class StorageServiceError(Exception):
     """
     Subclass of Exception used to report errors from the storage service.
@@ -39,7 +42,10 @@ def get_all_aips(ss_url):
     """
 
     url = ss_url + 'api/v2/file/'
-    response = requests.get(url)
+    try:
+        response = requests.get(url)
+    except requests.ConnectionError:
+        raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
 
     if response.status_code == 404:
         raise StorageServiceError('Storage service at \"{}\" returned 404'.format(ss_url))
@@ -74,7 +80,10 @@ def get_single_aip(uuid, ss_url):
     except ValueError:
         raise InvalidUUID(uuid)
 
-    response = requests.get(ss_url + 'api/v2/file/' + uuid + '/')
+    try:
+        response = requests.get(ss_url + 'api/v2/file/' + uuid + '/')
+    except requests.ConnectionError:
+        raise(StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url)))
 
     if response.status_code == 404:
         raise StorageServiceError('Storage service at \"{}\" returned 404'.format(ss_url))
@@ -128,7 +137,10 @@ def scan_aip(aip_uuid, ss_url):
             session.add(aip)
 
     begun = datetime.utcnow()
-    response = requests.get(ss_url + 'api/v2/file/' + aip.uuid + '/check_fixity/')
+    try:
+        response = requests.get(ss_url + 'api/v2/file/' + aip.uuid + '/check_fixity/')
+    except requests.ConnectionError:
+        raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
     ended = datetime.utcnow()
 
     report = response.json()

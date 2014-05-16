@@ -51,6 +51,13 @@ def test_single_aip_raises_with_invalid_uuid():
         storage_service.get_single_aip('foo', STORAGE_SERVICE_URL)
 
 
+def test_single_aip_raises_with_invalid_url():
+    with pytest.raises(storage_service.StorageServiceError) as ex:
+        storage_service.get_single_aip('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', "http://foo")
+
+    assert "Unable to connect" in ex.value.message
+
+
 @vcr.use_cassette('fixtures/vcr_cassettes/all_aips_500.yaml')
 def test_get_all_aips_raises_on_500():
     with pytest.raises(storage_service.StorageServiceError) as ex:
@@ -58,6 +65,13 @@ def test_get_all_aips_raises_on_500():
 
     assert "internal error" in ex.value.message
     assert ex.value.report is None
+
+
+def test_get_all_aips_raises_with_invalid_url():
+    with pytest.raises(storage_service.StorageServiceError) as ex:
+        storage_service.get_all_aips("http://foo")
+
+    assert "Unable to connect" in ex.value.message
 
 
 @vcr.use_cassette('fixtures/vcr_cassettes/fixity_success.yaml')
@@ -91,3 +105,10 @@ def test_fixity_scan_raises_on_500():
         storage_service.scan_aip('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', STORAGE_SERVICE_URL)
 
     assert "internal error" in ex.value.message
+
+
+def test_fixity_scan_raises_on_invalid_url():
+    with pytest.raises(storage_service.StorageServiceError) as ex:
+        storage_service.scan_aip('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', "http://foo")
+
+    assert "Unable to connect" in ex.value.message

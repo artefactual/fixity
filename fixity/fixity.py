@@ -45,6 +45,8 @@ def fetch_environment_variables(namespace):
         if not namespace.ss_url.endswith('/'):
             namespace.ss_url = namespace.ss_url + '/'
         namespace.report_url = os.environ['REPORT_URL']
+        if not namespace.report_url.endswith('/'):
+            namespace.report_url = namespace.report_url + '/'
     except KeyError:
         raise ArgumentError('Error: A required environment variable was not set')
 

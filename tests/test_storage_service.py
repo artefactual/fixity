@@ -1,8 +1,5 @@
 import json
-import os
-import sys
 
-sys.path.append(os.path.normpath(os.path.join(__file__, '..', '..')))
 from fixity import storage_service
 
 import pytest

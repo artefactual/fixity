@@ -44,7 +44,7 @@ def fetch_environment_variables(namespace):
         namespace.ss_url = os.environ['STORAGE_SERVICE_URL']
         if not namespace.ss_url.endswith('/'):
             namespace.ss_url = namespace.ss_url + '/'
-        namespace.drmc_url = os.environ['DRMC_URL']
+        namespace.report_url = os.environ['REPORT_URL']
     except KeyError:
         raise ArgumentError('Error: A required environment variable was not set')
 
@@ -133,9 +133,9 @@ def main():
         return e
 
     if args.command == 'scanall':
-        status = scanall(args.ss_url, args.drmc_url)
+        status = scanall(args.ss_url, args.report_url)
     elif args.command == 'scan':
-        status = scan(args.ss_url, args.drmc_url)
+        status = scan(args.ss_url, args.report_url)
     else:
         return Exception('Error: "{}" is not a valid command.'.format(args.command))
 

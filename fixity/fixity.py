@@ -1,10 +1,9 @@
 from __future__ import print_function
 from argparse import ArgumentParser
-import json
 import os
 import sys
 
-from models import AIP, Report, Session
+from models import AIP, Session
 import storage_service
 
 import requests

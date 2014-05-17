@@ -3,6 +3,10 @@ from models import Session
 import requests
 
 
+class ReportServiceException(Exception):
+    pass
+
+
 def post_report(aip, report, report_url):
     """
     POST a JSON fixity scan report to a remote system.
@@ -26,6 +30,16 @@ def post_report(aip, report, report_url):
     session = Session()
     if not response.status_code == 201:
         report.posted = False
+    elif response.status_code == 404:
+        report.posted = False
+        session.add(report)
+        session.commit()
+        raise ReportServiceException("Report service returned 404 when attemptng to POST report for AIP {}".format(aip))
+    elif response.status_code == 500:
+        report.posted = False
+        session.add(report)
+        session.commit()
+        raise ReportServiceException("Report service encountered an internal error when attempting to POST report for AIP {}".format(aip))
     else:
         report.posted = True
 

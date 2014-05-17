@@ -1,6 +1,8 @@
 from fixity.models import AIP, Report
 from fixity import reporting
+from fixity.utils import InvalidUUID
 
+import pytest
 import vcr
 
 import os
@@ -31,3 +33,8 @@ def test_posting_report():
         report=json_report
     )
     reporting.post_report(aip.uuid, report, REPORT_URL)
+
+
+def test_posting_report_raises_on_invalid_uuid():
+    with pytest.raises(InvalidUUID):
+        reporting.post_report("foo", None, None)

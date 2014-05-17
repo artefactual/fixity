@@ -6,6 +6,7 @@ import sys
 from models import AIP, Session
 from reporting import post_report
 import storage_service
+from utils import InvalidUUID
 
 
 class ArgumentError(Exception):
@@ -79,7 +80,7 @@ def scan(aip, ss_url, report_url=None):
     try:
         status, report = storage_service.scan_aip(aip, ss_url)
         print(scan_message(aip, status), file=sys.stderr)
-    except (storage_service.StorageServiceError, storage_service.InvalidUUID) as e:
+    except (storage_service.StorageServiceError, InvalidUUID) as e:
         print(e.message, file=sys.stderr)
         status = None
         if hasattr(e, 'report') and e.report:

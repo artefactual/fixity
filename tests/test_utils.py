@@ -8,7 +8,7 @@ def test_uuid_recognizes_valid_uuid():
 
 
 def test_invalid_uuid_raises_valueerror():
-    with pytest.raises(ValueError):
+    with pytest.raises(utils.InvalidUUID):
         utils.check_valid_uuid('foo')
 
 

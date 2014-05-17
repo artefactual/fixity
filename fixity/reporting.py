@@ -1,4 +1,5 @@
 from models import Session
+from utils import check_valid_uuid
 
 import requests
 
@@ -16,6 +17,8 @@ def post_report(aip, report, report_url):
     report_url should be the base URL for the system to which the request
     will be POSTed.
     """
+    check_valid_uuid(aip)
+
     body = report.report
     headers = {
         "Content-Type": "application/json"

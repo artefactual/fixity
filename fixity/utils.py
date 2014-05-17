@@ -1,6 +1,14 @@
 from uuid import UUID
 
 
+class InvalidUUID(Exception):
+    def __init__(self, uuid):
+        self.message = "Invalid UUID: {}".format(uuid)
+
+    def __str__(self):
+        return self.message
+
+
 def check_valid_uuid(uuid):
     """
     Checks to see if the passed string is a valid UUID.
@@ -13,5 +21,9 @@ def check_valid_uuid(uuid):
     if not isinstance(uuid, basestring):
         raise TypeError("UUID must be a string")
 
-    UUID(uuid)
+    try:
+        UUID(uuid)
+    except ValueError:
+        raise InvalidUUID(uuid)
+
     return True

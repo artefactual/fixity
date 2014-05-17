@@ -1,6 +1,7 @@
 import json
 
 from fixity import storage_service
+from fixity.utils import InvalidUUID
 
 import pytest
 import vcr
@@ -38,7 +39,7 @@ def test_single_aip_raises_on_500():
 
 
 def test_single_aip_raises_with_invalid_uuid():
-    with pytest.raises(storage_service.InvalidUUID):
+    with pytest.raises(InvalidUUID):
         storage_service.get_single_aip('foo', STORAGE_SERVICE_URL)
 
 

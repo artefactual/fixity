@@ -1,9 +1,12 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy import Column, ForeignKey, Boolean, DateTime, Integer, String
 from sqlalchemy.orm import relationship, backref, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-engine = create_engine('sqlite:///fixity/fixity.db', echo=False)
+db_path = os.path.join(os.path.dirname(__file__), 'fixity.db')
+engine = create_engine('sqlite:////{}'.format(db_path), echo=False)
 
 Session = sessionmaker(bind=engine)
 Base = declarative_base()

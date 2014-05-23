@@ -1,4 +1,5 @@
 import json
+import time
 
 from models import Session
 from utils import check_valid_uuid
@@ -19,13 +20,13 @@ def post_pre_scan_report(aip, start_time, report_url, session_id=None):
     that a scan is beginning, and to expect a completion report at
     some time in the future.
 
-    start_time is a UTC Unix epoch integer.
+    start_time is a datetime object representing the time the scan begun.
     For information on other parameters, see post_success_report.
     """
 
     check_valid_uuid(aip)
 
-    report = {"start_time": start_time}
+    report = {"start_time": int(time.mktime(start_time.utctimetuple()))}
     if session_id:
         report["session_uuid"] = session_id
     body = json.dumps(report)

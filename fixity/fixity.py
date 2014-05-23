@@ -4,7 +4,7 @@ import os
 import sys
 
 from models import AIP, Session
-from reporting import post_report
+from reporting import post_success_report
 import storage_service
 from utils import InvalidUUID
 

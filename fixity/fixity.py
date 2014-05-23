@@ -4,6 +4,7 @@ from datetime import datetime
 import os
 import sys
 from uuid import uuid4
+from time import sleep
 
 from models import AIP, Session
 import reporting
@@ -116,7 +117,7 @@ def scan(aip, ss_url, report_url=None, session_id=None):
     return status
 
 
-def scanall(ss_url, report_url=None):
+def scanall(ss_url, report_url=None, throttle_time=0):
     """
     Run a fixity scan on every AIP in a storage service instance.
 
@@ -141,6 +142,9 @@ def scanall(ss_url, report_url=None):
         if not scan_success:
             success = False
 
+        if throttle_time:
+            sleep(throttle_time)
+
     if count > 0:
         print("Successfully scanned", count, "AIPs", file=sys.stderr)
 
@@ -161,7 +165,7 @@ def main():
         return e
 
     if args.command == 'scanall':
-        status = scanall(args.ss_url, args.report_url)
+        status = scanall(args.ss_url, args.report_url, args.throttle)
     elif args.command == 'scan':
         session_id = str(uuid4())
         status = scan(args.ss_url, args.report_url, session_id=session_id)

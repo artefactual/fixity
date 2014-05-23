@@ -95,8 +95,7 @@ def scan(aip, ss_url, report_url=None, session_id=None):
 
     try:
         status, report = storage_service.scan_aip(
-            aip, ss_url,
-            start_time=start_time, session_id=session_id
+            aip, ss_url, start_time=start_time
         )
         print(scan_message(aip, status), file=sys.stderr)
     except (storage_service.StorageServiceError, InvalidUUID) as e:

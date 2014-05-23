@@ -1,10 +1,12 @@
 from __future__ import print_function
 from argparse import ArgumentParser
+from datetime import datetime
 import os
 import sys
+from uuid import uuid4
 
 from models import AIP, Session
-from reporting import post_success_report
+from reporting import post_pre_scan_report, post_success_report
 import storage_service
 from utils import InvalidUUID
 
@@ -57,7 +59,7 @@ def scan_message(aip_uuid, status):
     return "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
 
 
-def scan(aip, ss_url, report_url=None):
+def scan(aip, ss_url, report_url=None, session_id=None):
     """
     Instruct the storage service to scan a single AIP.
 
@@ -77,8 +79,19 @@ def scan(aip, ss_url, report_url=None):
     # does not have an AIP with that UUID, or otherwise errors out
     # while attempting to respond to the request.
     storage_service.get_single_aip(aip, ss_url)
+
+    start_time = datetime.utcnow()
+
+    post_pre_scan_report(
+        aip, start_time,
+        report_url=report_url, session_id=session_id
+    )
+
     try:
-        status, report = storage_service.scan_aip(aip, ss_url)
+        status, report = storage_service.scan_aip(
+            aip, ss_url,
+            start_time=start_time, session_id=session_id
+        )
         print(scan_message(aip, status), file=sys.stderr)
     except (storage_service.StorageServiceError, InvalidUUID) as e:
         print(e.message, file=sys.stderr)
@@ -91,7 +104,7 @@ def scan(aip, ss_url, report_url=None):
             report = None
 
     if report_url and report:
-        if not post_success_report(aip, report, report_url):
+        if not post_success_report(aip, report, report_url, session_id=session_id):
             print("Unable to POST report for AIP {} to remote service".format(aip),
                   file=sys.stderr)
 
@@ -109,10 +122,12 @@ def scanall(ss_url, report_url=None):
     """
     success = True
 
+    session_id = str(uuid4())
+
     aips = storage_service.get_all_aips(ss_url)
     count = len(aips)
     for aip in aips:
-        scan_success = scan(aip['uuid'], ss_url, report_url)
+        scan_success = scan(aip['uuid'], ss_url, report_url, session_id=session_id)
         if not scan_success:
             success = False
 

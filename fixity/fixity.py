@@ -131,7 +131,10 @@ def scanall(ss_url, report_url=None):
     # allowing every scan from one run to be identified.
     session_id = str(uuid4())
 
-    aips = storage_service.get_all_aips(ss_url)
+    try:
+        aips = storage_service.get_all_aips(ss_url)
+    except storage_service.StorageServiceError as e:
+        return e
     count = len(aips)
     for aip in aips:
         scan_success = scan(aip['uuid'], ss_url, report_url, session_id=session_id)
@@ -165,8 +168,12 @@ def main():
     else:
         return Exception('Error: "{}" is not a valid command.'.format(args.command))
 
-    if not status:
+    if status is True:
+        success = 0
+    elif status is False:
         success = 1
+    else:
+        success = status
 
     return success
 

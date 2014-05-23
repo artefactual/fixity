@@ -122,6 +122,8 @@ def scanall(ss_url, report_url=None):
     """
     success = True
 
+    # The same session ID will be used for every scan,
+    # allowing every scan from one run to be identified.
     session_id = str(uuid4())
 
     aips = storage_service.get_all_aips(ss_url)

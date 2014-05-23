@@ -10,6 +10,42 @@ class ReportServiceException(Exception):
     pass
 
 
+def post_pre_scan_report(aip, start_time, report_url, session_id=None):
+    """
+    Post a pre-scan report to a remote system.
+
+    This report will contain no information beyond start time and,
+    if provided, a session_id. It is used to notify a reporting system
+    that a scan is beginning, and to expect a completion report at
+    some time in the future.
+
+    start_time is a UTC Unix epoch integer.
+    For information on other parameters, see post_success_report.
+    """
+
+    check_valid_uuid(aip)
+
+    report = {"start_time": start_time}
+    if session_id:
+        report["session_uuid"] = session_id
+    body = json.dumps(report)
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+    url = report_url + 'api/fixityreports/{}'.format(aip)
+
+    try:
+        response = requests.post(url, data=body, headers=headers)
+    except requests.ConnectionError:
+        raise ReportServiceException("Unable to connect to report service at URL {}".format(report_url))
+
+    if not response.status_code == 201:
+        raise ReportServiceException("Report service returned {}".format(response.status_code))
+
+    return True
+
+
 def post_success_report(aip, report, report_url, session_id=None):
     """
     POST a JSON fixity scan report to a remote system.

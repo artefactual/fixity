@@ -6,7 +6,7 @@ import sys
 from uuid import uuid4
 
 from models import AIP, Session
-from reporting import post_pre_scan_report, post_success_report
+import reporting
 import storage_service
 from utils import InvalidUUID
 
@@ -82,10 +82,16 @@ def scan(aip, ss_url, report_url=None, session_id=None):
 
     start_time = datetime.utcnow()
 
-    post_pre_scan_report(
-        aip, start_time,
-        report_url=report_url, session_id=session_id
-    )
+    try:
+        reporting.post_pre_scan_report(
+            aip, start_time,
+            report_url=report_url, session_id=session_id
+        )
+    except reporting.ReportServiceException:
+        print(
+            "Unable to post pre-scan report to {}".format(report_url),
+            file=sys.stderr
+        )
 
     try:
         status, report = storage_service.scan_aip(
@@ -104,7 +110,7 @@ def scan(aip, ss_url, report_url=None, session_id=None):
             report = None
 
     if report_url and report:
-        if not post_success_report(aip, report, report_url, session_id=session_id):
+        if not reporting.post_success_report(aip, report, report_url, session_id=session_id):
             print("Unable to POST report for AIP {} to remote service".format(aip),
                   file=sys.stderr)
 

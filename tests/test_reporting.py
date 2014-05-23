@@ -32,9 +32,9 @@ def test_posting_report():
         posted=False,
         report=json_report
     )
-    reporting.post_report(aip.uuid, report, REPORT_URL)
+    reporting.post_success_report(aip.uuid, report, REPORT_URL)
 
 
 def test_posting_report_raises_on_invalid_uuid():
     with pytest.raises(InvalidUUID):
-        reporting.post_report("foo", None, None)
+        reporting.post_success_report("foo", None, None)

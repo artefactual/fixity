@@ -8,7 +8,7 @@ class ReportServiceException(Exception):
     pass
 
 
-def post_report(aip, report, report_url):
+def post_success_report(aip, report, report_url):
     """
     POST a JSON fixity scan report to a remote system.
 

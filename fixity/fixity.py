@@ -91,7 +91,7 @@ def scan(aip, ss_url, report_url=None):
             report = None
 
     if report_url and report:
-        if not post_report(aip, report, report_url):
+        if not post_success_report(aip, report, report_url):
             print("Unable to POST report for AIP {} to remote service".format(aip),
                   file=sys.stderr)
 

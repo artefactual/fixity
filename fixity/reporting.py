@@ -1,3 +1,5 @@
+import json
+
 from models import Session
 from utils import check_valid_uuid
 
@@ -8,7 +10,7 @@ class ReportServiceException(Exception):
     pass
 
 
-def post_success_report(aip, report, report_url):
+def post_success_report(aip, report, report_url, session_id=None):
     """
     POST a JSON fixity scan report to a remote system.
 
@@ -16,10 +18,24 @@ def post_success_report(aip, report, report_url):
     report should be a Report instance.
     report_url should be the base URL for the system to which the request
     will be POSTed.
+
+    session_id is an ID string identifying a report session.
+    It provides a way to:
+      a) Tie together the beginning and end occurrences for the same report,
+      b) Tie together multiple reports from the same scan session
+
+    This is an optional parameter, but some reporting services will require it.
+    (For instance, the DRMC requires this to be POSTed with every report.)
     """
     check_valid_uuid(aip)
 
     body = report.report
+
+    if session_id:
+        parsed_report = json.loads(body)
+        parsed_report["session_uuid"] = session_id
+        body = json.dumps(parsed_report)
+
     headers = {
         "Content-Type": "application/json"
     }

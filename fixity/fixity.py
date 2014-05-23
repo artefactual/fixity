@@ -89,7 +89,7 @@ def scan(aip, ss_url, report_url=None, session_id=None):
         )
     except reporting.ReportServiceException:
         print(
-            "Unable to post pre-scan report to {}".format(report_url),
+            "Unable to POST pre-scan report to {}".format(report_url),
             file=sys.stderr
         )
 

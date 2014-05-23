@@ -91,13 +91,19 @@ def create_report(aip, success, begun, ended, report_string):
     )
 
 
-def scan_aip(aip_uuid, ss_url):
+def scan_aip(aip_uuid, ss_url, start_time=None):
     """
     Scans fixity for the given AIP.
 
     The first argument should either be an AIP UUID, as a string,
     or an AIP model instance. If no AIP with the given UUID is
     present in the database, a new object is created.
+
+    start_time, if passed, should be a datetime object representing the
+    time at which the scan began. If not provided, the start time will
+    be calculated immediately before the scan begins. This can be optionally
+    passed in in the case that a pre-scan report will be POSTed to a server,
+    in which case both reports should have the identical time.
 
     A tuple of (success, report) is returned.
 
@@ -122,7 +128,11 @@ def scan_aip(aip_uuid, ss_url):
             aip = AIP(uuid=aip_uuid)
             session.add(aip)
 
-    begun = datetime.utcnow()
+    if not start_time:
+        begun = datetime.utcnow()
+    else:
+        begun = start_time
+
     try:
         response = requests.get(ss_url + 'api/v2/file/' + aip.uuid + '/check_fixity/')
     except requests.ConnectionError:

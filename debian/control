@@ -1,0 +1,19 @@
+Source: fixity
+Section: utils
+Priority: extra
+Maintainer: Artefactual Systems Inc. <ops@artefactual.com>
+Build-Depends:
+    python (>= 2.7.3),
+    debhelper (>= 9),
+    python-dev,
+    ruby-ronn,
+    dh-virtualenv
+Standards-Version: 3.9.3
+X-Python-Version: 2.7
+
+Package: fixity
+Architecture: i386 amd64
+Depends: python (>= 2.7.3), ${python:Depends}, ${misc:Depends}, sqlite3
+Description: Commandline tool to check fixity of AIPs stored in
+    an Archivematica Storage Service installation.
+Homepage: http://archivematica.org

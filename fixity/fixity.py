@@ -49,7 +49,7 @@ def scan_message(aip_uuid, status):
     return "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
 
 
-def scan(aip, ss_url, report_url=None, session=None, session_id=None):
+def scan(aip, ss_url, session, report_url=None, session_id=None):
     """
     Instruct the storage service to scan a single AIP.
 
@@ -63,9 +63,6 @@ def scan(aip, ss_url, report_url=None, session=None, session_id=None):
     be POSTed after the scan completes. If absent, the report will not be
     transmitted.
     """
-
-    if not session:
-        session = Session()
 
     # Ensure the storage service knows about this AIP first;
     # get_single_aip() will raise an exception if the storage service
@@ -88,7 +85,8 @@ def scan(aip, ss_url, report_url=None, session=None, session_id=None):
 
     try:
         status, report = storage_service.scan_aip(
-            aip, ss_url, start_time=start_time
+            aip, ss_url, session,
+            start_time=start_time
         )
         print(scan_message(aip, status), file=sys.stderr)
     except (storage_service.StorageServiceError, InvalidUUID) as e:
@@ -107,13 +105,13 @@ def scan(aip, ss_url, report_url=None, session=None, session_id=None):
                   file=sys.stderr)
 
     if report:
+        print("Adding report", file=sys.stderr)
         session.add(report)
-        session.commit()
 
     return status
 
 
-def scanall(ss_url, report_url=None, throttle_time=0):
+def scanall(ss_url, session, report_url=None, throttle_time=0):
     """
     Run a fixity scan on every AIP in a storage service instance.
 
@@ -123,8 +121,6 @@ def scanall(ss_url, report_url=None, throttle_time=0):
     transmitted.
     """
     success = True
-
-    session = Session()
 
     # The same session ID will be used for every scan,
     # allowing every scan from one run to be identified.
@@ -137,8 +133,8 @@ def scanall(ss_url, report_url=None, throttle_time=0):
     count = len(aips)
     for aip in aips:
         scan_success = scan(
-            aip['uuid'], ss_url, report_url,
-            session=session, session_id=session_id
+            aip['uuid'], ss_url, session,
+            report_url=report_url, session_id=session_id
         )
         if not scan_success:
             success = False
@@ -165,11 +161,19 @@ def main():
     except ArgumentError as e:
         return e
 
+    session = Session()
+
     if args.command == 'scanall':
-        status = scanall(args.ss_url, args.report_url, args.throttle)
+        status = scanall(
+            args.ss_url, session,
+            report_url=args.report_url, throttle_time=args.throttle
+        )
     elif args.command == 'scan':
         session_id = str(uuid4())
-        status = scan(args.aip, args.ss_url, args.report_url, session_id=session_id)
+        status = scan(
+            args.aip, args.ss_url, session,
+            report_url=args.report_url, session_id=session_id
+        )
     else:
         return Exception('Error: "{}" is not a valid command.'.format(args.command))
 
@@ -179,6 +183,9 @@ def main():
         success = 1
     else:
         success = status
+
+    session.commit()
+    session.close()
 
     return success
 

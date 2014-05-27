@@ -91,7 +91,7 @@ def create_report(aip, success, begun, ended, report_string):
     )
 
 
-def scan_aip(aip_uuid, ss_url, session=None, start_time=None):
+def scan_aip(aip_uuid, ss_url, session, start_time=None):
     """
     Scans fixity for the given AIP.
 
@@ -116,9 +116,6 @@ def scan_aip(aip_uuid, ss_url, session=None, start_time=None):
     If the storage service returns a 404, raises a StorageServiceError.
     A report is still saved to the database in this case.
     """
-    if not session:
-        session = Session()
-
     if isinstance(aip_uuid, AIP):
         aip = aip_uuid
     else:

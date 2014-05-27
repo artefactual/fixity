@@ -33,7 +33,7 @@ def post_pre_scan_report(aip, start_time, report_url, session_id=None):
     headers = {
         "Content-Type": "application/json"
     }
-    url = report_url + 'api/fixityreports/{}'.format(aip)
+    url = report_url + 'api/fixity/{}'.format(aip)
 
     try:
         response = requests.post(url, data=body, headers=headers)
@@ -75,7 +75,7 @@ def post_success_report(aip, report, report_url, session_id=None):
     headers = {
         "Content-Type": "application/json"
     }
-    url = report_url + 'api/fixityreports/{}'.format(aip)
+    url = report_url + 'api/fixity/{}'.format(aip)
 
     try:
         response = requests.post(url, data=body, headers=headers)

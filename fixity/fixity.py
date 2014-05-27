@@ -163,19 +163,28 @@ def main():
 
     session = Session()
 
-    if args.command == 'scanall':
-        status = scanall(
-            args.ss_url, session,
-            report_url=args.report_url, throttle_time=args.throttle
-        )
-    elif args.command == 'scan':
-        session_id = str(uuid4())
-        status = scan(
-            args.aip, args.ss_url, session,
-            report_url=args.report_url, session_id=session_id
-        )
-    else:
-        return Exception('Error: "{}" is not a valid command.'.format(args.command))
+    status = False
+
+    try:
+        if args.command == 'scanall':
+            status = scanall(
+                args.ss_url, session,
+                report_url=args.report_url, throttle_time=args.throttle
+            )
+        elif args.command == 'scan':
+            session_id = str(uuid4())
+            status = scan(
+                args.aip, args.ss_url, session,
+                report_url=args.report_url, session_id=session_id
+            )
+        else:
+            return Exception('Error: "{}" is not a valid command.'.format(args.command))
+
+        session.commit()
+    except:
+        session.rollback()
+    finally:
+        session.close()
 
     if status is True:
         success = 0
@@ -183,9 +192,6 @@ def main():
         success = 1
     else:
         success = status
-
-    session.commit()
-    session.close()
 
     return success
 

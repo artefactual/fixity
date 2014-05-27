@@ -168,7 +168,7 @@ def main():
         status = scanall(args.ss_url, args.report_url, args.throttle)
     elif args.command == 'scan':
         session_id = str(uuid4())
-        status = scan(args.ss_url, args.report_url, session_id=session_id)
+        status = scan(args.aip, args.ss_url, args.report_url, session_id=session_id)
     else:
         return Exception('Error: "{}" is not a valid command.'.format(args.command))
 

@@ -91,7 +91,7 @@ def create_report(aip, success, begun, ended, report_string):
     )
 
 
-def scan_aip(aip_uuid, ss_url, start_time=None):
+def scan_aip(aip_uuid, ss_url, session=None, start_time=None):
     """
     Scans fixity for the given AIP.
 
@@ -116,7 +116,9 @@ def scan_aip(aip_uuid, ss_url, start_time=None):
     If the storage service returns a 404, raises a StorageServiceError.
     A report is still saved to the database in this case.
     """
-    session = Session()
+    if not session:
+        session = Session()
+
     if isinstance(aip_uuid, AIP):
         aip = aip_uuid
     else:
@@ -126,7 +128,6 @@ def scan_aip(aip_uuid, ss_url, start_time=None):
             aip = session.query(AIP).filter_by(uuid=aip_uuid).one()
         except NoResultFound:
             aip = AIP(uuid=aip_uuid)
-            session.add(aip)
 
     if not start_time:
         begun = datetime.utcnow()
@@ -149,16 +150,12 @@ def scan_aip(aip_uuid, ss_url, start_time=None):
     # requested AIP, or if the requested API call is not available.
     if response.status_code == 404:
         report = create_report(aip, None, begun, ended, '{"success": null, "message": "Storage service returned 404"}')
-        session.add(report)
-        session.commit()
         raise StorageServiceError(
             'A fixity scan could not be started for the AIP with uuid \"{}\"'.format(aip.uuid),
             report=report
         )
     if response.status_code == 500:
         report = create_report(aip, None, begun, ended, '{"success": null, "message": "Storage service returned 500"}')
-        session.add(report)
-        session.commit()
         raise StorageServiceError(
             'Storage service at \"{}\" encountered an internal error while scanning AIP {}'.format(ss_url, aip.uuid),
             report=report
@@ -168,7 +165,5 @@ def scan_aip(aip_uuid, ss_url, start_time=None):
     report_string = json.dumps(report)
 
     report_object = create_report(aip, success, begun, ended, report_string)
-    session.add(report_object)
-    session.commit()
 
     return (success, report_object)

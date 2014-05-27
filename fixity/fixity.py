@@ -60,7 +60,7 @@ def scan_message(aip_uuid, status):
     return "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
 
 
-def scan(aip, ss_url, report_url=None, session_id=None):
+def scan(aip, ss_url, report_url=None, session=None, session_id=None):
     """
     Instruct the storage service to scan a single AIP.
 
@@ -74,6 +74,9 @@ def scan(aip, ss_url, report_url=None, session_id=None):
     be POSTed after the scan completes. If absent, the report will not be
     transmitted.
     """
+
+    if not session:
+        session = Session()
 
     # Ensure the storage service knows about this AIP first;
     # get_single_aip() will raise an exception if the storage service
@@ -114,6 +117,10 @@ def scan(aip, ss_url, report_url=None, session_id=None):
             print("Unable to POST report for AIP {} to remote service".format(aip),
                   file=sys.stderr)
 
+    if report:
+        session.add(report)
+        session.commit()
+
     return status
 
 
@@ -128,6 +135,8 @@ def scanall(ss_url, report_url=None, throttle_time=0):
     """
     success = True
 
+    session = Session()
+
     # The same session ID will be used for every scan,
     # allowing every scan from one run to be identified.
     session_id = str(uuid4())
@@ -138,7 +147,10 @@ def scanall(ss_url, report_url=None, throttle_time=0):
         return e
     count = len(aips)
     for aip in aips:
-        scan_success = scan(aip['uuid'], ss_url, report_url, session_id=session_id)
+        scan_success = scan(
+            aip['uuid'], ss_url, report_url,
+            session=session, session_id=session_id
+        )
         if not scan_success:
             success = False
 

@@ -24,7 +24,7 @@ interactions:
       Content-Type: [application/json]
       User-Agent: [python-requests/2.2.1 CPython/2.7.6 Darwin/13.2.0]
     method: POST
-    uri: http://localhost:8003/api/fixityreports/ed42aadc-d854-46c6-b455-cd384eef1618
+    uri: http://localhost:8003/api/fixity/ed42aadc-d854-46c6-b455-cd384eef1618
   response:
     body: {string: !!python/unicode '{"id":"394"}'}
     headers:

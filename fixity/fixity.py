@@ -16,17 +16,6 @@ class ArgumentError(Exception):
     pass
 
 
-def store_aips_in_database(aips):
-    """
-    Add new AIPs to the database from a list of AIP UUID strings.
-    """
-    session = Session()
-    for aip in aips:
-        if session.query(AIP.uuid).filter_by(uuid=aip['uuid']).count() == 0:
-            session.add(AIP(uuid=aip['uuid']))
-    session.commit()
-
-
 def validate_arguments(args):
     if args.command == 'scan' and not args.aip:
         raise ArgumentError('An AIP UUID must be specified when scanning a single AIP')

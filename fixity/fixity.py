@@ -105,7 +105,6 @@ def scan(aip, ss_url, session, report_url=None, session_id=None):
                   file=sys.stderr)
 
     if report:
-        print("Adding report", file=sys.stderr)
         session.add(report)
 
     return status

@@ -5,7 +5,7 @@ import time
 import requests
 from sqlalchemy.orm.exc import NoResultFound
 
-from models import AIP, Report, Session
+from models import AIP, Report
 from utils import check_valid_uuid
 
 

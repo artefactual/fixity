@@ -47,6 +47,13 @@ def test_posting_prescan_report_raises_on_404():
         reporting.post_pre_scan_report(aip, start_time, REPORT_URL)
 
 
+def test_posting_prescan_report_raises_when_unable_to_connect():
+    with pytest.raises(reporting.ReportServiceException):
+        aip = "90cf0850-f5d2-4023-95e2-0e2b7a1e1b8e"
+        start_time = datetime.fromtimestamp(1400022946)
+        reporting.post_pre_scan_report(aip, start_time, "http://foo")
+
+
 @vcr.use_cassette('fixtures/vcr_cassettes/post_failed_report.yaml')
 def test_posting_success_report():
     json_report = json_string("test_failed_report.json")
@@ -103,3 +110,20 @@ def test_posting_success_report_raises_on_404():
             report=json_report
         )
         reporting.post_success_report(aip.uuid, report, REPORT_URL)
+
+
+def test_posting_success_report_raises_when_unable_to_connect():
+    with pytest.raises(reporting.ReportServiceException):
+        json_report = json_string("test_failed_report.json")
+        aip = AIP(
+            uuid="ed42aadc-d854-46c6-b455-cd384eef1618"
+        )
+        report = Report(
+            aip=aip,
+            begun=datetime.fromtimestamp(1400022946),
+            ended=datetime.fromtimestamp(1400023208),
+            success=False,
+            posted=False,
+            report=json_report
+        )
+        reporting.post_success_report(aip.uuid, report, "http://foo")

@@ -80,7 +80,8 @@ def post_success_report(aip, report, report_url, session_id=None):
     try:
         response = requests.post(url, data=body, headers=headers)
     except requests.ConnectionError:
-        return False
+        report.posted = False
+        raise ReportServiceException("Unable to connect to report service at URL {}".format(report_url))
 
     if not response.status_code == 201:
         report.posted = False

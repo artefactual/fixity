@@ -99,10 +99,16 @@ def scan_aip(aip_uuid, ss_url, session, start_time=None):
     or an AIP model instance. If no AIP with the given UUID is
     present in the database, a new object is created.
 
+    The second argument is the URL prefix to the storage service instance
+    to use, such as "http://localhost:8000/". It must end with a /.
+
+    session is an instance of models.Session, which will be used to query
+    for AIPs in the database.
+
     start_time, if passed, should be a datetime object representing the
     time at which the scan began. If not provided, the start time will
-    be calculated immediately before the scan begins. This can be optionally
-    passed in in the case that a pre-scan report will be POSTed to a server,
+    be calculated immediately before the scan begins. This should be
+    passed in the case that a pre-scan report will be POSTed to a server,
     in which case both reports should have the identical time.
 
     A tuple of (success, report) is returned.
@@ -110,8 +116,7 @@ def scan_aip(aip_uuid, ss_url, session, start_time=None):
     success is a trilean that returns True or False for success or failure,
     and None if the scan could not begin.
 
-    report is a Report model object, which typically has already been committed
-    to the database.
+    report is a Report model object.
 
     If the storage service returns a 404, raises a StorageServiceError.
     A report is still saved to the database in this case.

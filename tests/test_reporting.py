@@ -18,6 +18,19 @@ def json_string(filename):
         return jsonfile.read()
 
 
+@vcr.use_cassette('fixtures/vcr_cassettes/post_prescan_report.yaml')
+def test_posting_prescan_report():
+    aip = "be1074fe-217b-46e0-afec-400ea1a2eb36"
+    start_time = datetime.fromtimestamp(1400022946)
+    result = reporting.post_pre_scan_report(aip, start_time, REPORT_URL)
+    assert result is True
+
+
+def test_posting_prescan_report_raises_on_invalid_uuid():
+    with pytest.raises(InvalidUUID):
+        reporting.post_pre_scan_report("foo", None, None)
+
+
 @vcr.use_cassette('fixtures/vcr_cassettes/post_failed_report.yaml')
 def test_posting_success_report():
     json_report = json_string("test_failed_report.json")

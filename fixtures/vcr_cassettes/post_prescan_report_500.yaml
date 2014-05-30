@@ -1,0 +1,26 @@
+interactions:
+- request:
+    body: '{"start_time": 1400026546}'
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate, compress']
+      Content-Length: ['26']
+      Content-Type: [application/json]
+      User-Agent: [python-requests/2.2.1 CPython/2.7.6 Darwin/13.2.0]
+    method: POST
+    uri: http://localhost:8003/api/fixity/90cf0850-f5d2-4023-95e2-0e2b7a1e1b8e
+  response:
+    body: {string: !!python/unicode '{"id":"396"}'}
+    headers:
+      cache-control: ['no-store, no-cache, must-revalidate, post-check=0, pre-check=0']
+      connection: [keep-alive]
+      content-type: [application/json; charset=utf-8]
+      date: ['Fri, 30 May 2014 21:34:16 GMT']
+      expires: ['Thu, 19 Nov 1981 08:52:00 GMT']
+      pragma: [no-cache]
+      server: [nginx]
+      set-cookie: [symfony=satff9f2c30449i2no38lu9nq4; path=/]
+      transfer-encoding: [chunked]
+      x-powered-by: [PHP/5.5.10-1+deb.sury.org~precise+1]
+    status: {code: 500, message: INTERNAL SERVER ERROR}
+version: 1

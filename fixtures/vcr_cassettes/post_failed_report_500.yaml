@@ -1,0 +1,42 @@
+interactions:
+- request:
+    body: "{\n  \"success\": false,\n  \"message\": \"invalid bag\",\n  \"failures\":
+      {\n    \"files\": {\n      \"missing\": [\n        {\n          \"message\":
+      \"data/objects/no_such_file exists in manifest but not found on filesystem\",\n
+      \         \"path\": \"data/objects/no_such_file\"\n        }\n      ],\n      \"changed\":
+      [\n        {\n          \"hash_type\": \"md5\",\n          \"actual\": \"38a7fce00127fe8a9415fd7cb9af0499\",\n
+      \         \"message\": \"manifest-sha512.txt checksum validation failed (alg=md5
+      expected=87c03839071596c9948b60bb7d90dc69 found=38a7fce00127fe8a9415fd7cb9af0499)\",\n
+      \         \"path\": \"manifest-sha512.txt\",\n          \"expected\": \"87c03839071596c9948b60bb7d90dc69\"\n
+      \       },\n        {\n          \"hash_type\": \"sha512\",\n          \"actual\":
+      \"1325e2a0299104e309a725b09e2880962158ac682ef04ff91d3686aac7dd5784ada8b74135020b87a5e464b1b2d307d9da50f47aac78b4e53f89a7108255d076\",\n
+      \         \"message\": \"data/objects/smaufrai.bmp checksum validation failed
+      (alg=sha512 expected=2325e2a0299104e309a725b09e2880962158ac682ef04ff91d3686aac7dd5784ada8b74135020b87a5e464b1b2d307d9da50f47aac78b4e53f89a7108255d076
+      found=1325e2a0299104e309a725b09e2880962158ac682ef04ff91d3686aac7dd5784ada8b74135020b87a5e464b1b2d307d9da50f47aac78b4e53f89a7108255d076)\",\n
+      \         \"path\": \"data/objects/smaufrai.bmp\",\n          \"expected\":
+      \"2325e2a0299104e309a725b09e2880962158ac682ef04ff91d3686aac7dd5784ada8b74135020b87a5e464b1b2d307d9da50f47aac78b4e53f89a7108255d076\"\n
+      \       }\n      ],\n      \"untracked\": []\n    }\n  },\n  \"started\": 1400022946,\n
+      \ \"finished\": 1400023208\n}\n"
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate, compress']
+      Content-Length: ['1520']
+      Content-Type: [application/json]
+      User-Agent: [python-requests/2.2.1 CPython/2.7.6 Darwin/13.2.0]
+    method: POST
+    uri: http://localhost:8003/api/fixity/ed42aadc-d854-46c6-b455-cd384eef1618
+  response:
+    body: {string: !!python/unicode '{"id":"394"}'}
+    headers:
+      cache-control: ['no-store, no-cache, must-revalidate, post-check=0, pre-check=0']
+      connection: [keep-alive]
+      content-type: [application/json; charset=utf-8]
+      date: ['Fri, 16 May 2014 23:58:15 GMT']
+      expires: ['Thu, 19 Nov 1981 08:52:00 GMT']
+      pragma: [no-cache]
+      server: [nginx]
+      set-cookie: [symfony=coa0ivb41jibovn8euf6m79f92; path=/]
+      transfer-encoding: [chunked]
+      x-powered-by: [PHP/5.5.10-1+deb.sury.org~precise+1]
+    status: {code: 500, message: INTERNAL SERVER ERROR}
+version: 1

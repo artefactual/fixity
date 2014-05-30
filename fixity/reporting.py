@@ -84,13 +84,12 @@ def post_success_report(aip, report, report_url, session_id=None):
 
     if not response.status_code == 201:
         report.posted = False
-    elif response.status_code == 404:
-        report.posted = False
-        raise ReportServiceException("Report service returned 404 when attemptng to POST report for AIP {}".format(aip))
-    elif response.status_code == 500:
-        report.posted = False
-        raise ReportServiceException("Report service encountered an internal error when attempting to POST report for AIP {}".format(aip))
     else:
         report.posted = True
+
+    if response.status_code == 404:
+        raise ReportServiceException("Report service returned 404 when attemptng to POST report for AIP {}".format(aip))
+    elif response.status_code == 500:
+        raise ReportServiceException("Report service encountered an internal error when attempting to POST report for AIP {}".format(aip))
 
     return report.posted

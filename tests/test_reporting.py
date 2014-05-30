@@ -19,7 +19,7 @@ def json_string(filename):
 
 
 @vcr.use_cassette('fixtures/vcr_cassettes/post_failed_report.yaml')
-def test_posting_report():
+def test_posting_success_report():
     json_report = json_string("test_failed_report.json")
     aip = AIP(
         uuid="ed42aadc-d854-46c6-b455-cd384eef1618"
@@ -35,6 +35,6 @@ def test_posting_report():
     reporting.post_success_report(aip.uuid, report, REPORT_URL)
 
 
-def test_posting_report_raises_on_invalid_uuid():
+def test_posting_success_report_raises_on_invalid_uuid():
     with pytest.raises(InvalidUUID):
         reporting.post_success_report("foo", None, None)

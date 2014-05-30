@@ -47,7 +47,6 @@ def test_posting_prescan_report_raises_on_404():
         reporting.post_pre_scan_report(aip, start_time, REPORT_URL)
 
 
-
 @vcr.use_cassette('fixtures/vcr_cassettes/post_failed_report.yaml')
 def test_posting_success_report():
     json_report = json_string("test_failed_report.json")

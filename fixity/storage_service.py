@@ -39,10 +39,12 @@ def get_all_aips(ss_url):
     except requests.ConnectionError:
         raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
 
-    if response.status_code == 404:
-        raise StorageServiceError('Storage service at \"{}\" returned 404'.format(ss_url))
     if response.status_code == 500:
-        raise StorageServiceError('Storage service at \"{}\" encountered an internal error while requesting AIPs'.format(ss_url))
+        raise StorageServiceError('Storage service at "{}" encountered an internal error while requesting AIPs'.format(ss_url))
+    elif response.status_code == 504:
+        raise StorageServiceError('Storage service at "{}" encountered a gateway timeout while requesting AIPs'.format(ss_url))
+    elif response.status_code != 200:
+        raise StorageServiceError('Storage service at "{}" returned {} while requesting AIPs'.format(ss_url, response.status_code))
     results = response.json()
     limit = results['meta']['limit']
     count = results['meta']['limit']
@@ -74,10 +76,12 @@ def get_single_aip(uuid, ss_url):
     except requests.ConnectionError:
         raise(StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url)))
 
-    if response.status_code == 404:
-        raise StorageServiceError('Storage service at \"{}\" returned 404'.format(ss_url))
     if response.status_code == 500:
-        raise StorageServiceError('Storage service at \"{}\" encountered an internal error while requesting aip'.format(ss_url, uuid))
+        raise StorageServiceError('Storage service at "{}" encountered an internal error while requesting AIP with UUID {}'.format(ss_url, uuid))
+    elif response.status_code == 504:
+        raise StorageServiceError('Storage service at "{}" encounterd a gateway timeout while requesting AIP with UUID {}'.format(ss_url, uuid))
+    if response.status_code != 200:
+        raise StorageServiceError('Storage service at "{}" returned {} while requesting AIP with UUID {}'.format(ss_url, response.status_code, uuid))
     return response.json()
 
 

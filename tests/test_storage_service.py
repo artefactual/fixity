@@ -40,6 +40,15 @@ def test_single_aip_raises_on_500():
     assert ex.value.report is None
 
 
+@vcr.use_cassette('fixtures/vcr_cassettes/single_aip_504.yaml')
+def test_single_aip_raises_on_504():
+    with pytest.raises(storage_service.StorageServiceError) as ex:
+        storage_service.get_single_aip('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', STORAGE_SERVICE_URL)
+
+    assert "gateway timeout" in ex.value.message
+    assert ex.value.report is None
+
+
 def test_single_aip_raises_with_invalid_uuid():
     with pytest.raises(InvalidUUID):
         storage_service.get_single_aip('foo', STORAGE_SERVICE_URL)
@@ -71,6 +80,15 @@ def test_get_all_aips_raises_on_500():
         storage_service.get_all_aips(STORAGE_SERVICE_URL)
 
     assert "internal error" in ex.value.message
+    assert ex.value.report is None
+
+
+@vcr.use_cassette('fixtures/vcr_cassettes/all_aips_504.yaml')
+def test_get_all_aips_raises_on_504():
+    with pytest.raises(storage_service.StorageServiceError) as ex:
+        storage_service.get_all_aips(STORAGE_SERVICE_URL)
+
+    assert "gateway timeout" in ex.value.message
     assert ex.value.report is None
 
 

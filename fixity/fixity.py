@@ -180,8 +180,9 @@ def main():
             return Exception('Error: "{}" is not a valid command.'.format(args.command))
 
         session.commit()
-    except:
+    except Exception as e:
         session.rollback()
+        return e
     finally:
         session.close()
 

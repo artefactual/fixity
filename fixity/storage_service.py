@@ -57,7 +57,7 @@ def get_all_aips(ss_url):
         results = response.json()
         count += limit
 
-        aips.extend([aip['uuid'] for aip in results['objects'] if aip['package_type'] == 'AIP'])
+        aips.extend([aip for aip in results['objects'] if aip['package_type'] == 'AIP'])
 
     return aips
 

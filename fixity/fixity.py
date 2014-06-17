@@ -5,6 +5,7 @@ import os
 import sys
 from uuid import uuid4
 from time import sleep
+import traceback
 
 from models import AIP, Session
 import reporting
@@ -25,6 +26,7 @@ def parse_arguments():
     parser = ArgumentParser()
     parser.add_argument('command')
     parser.add_argument('aip', nargs='?')
+    parser.add_argument('-d', '--debug', action='store_true')
     parser.add_argument('--throttle', type=int, default=0)
     args = parser.parse_args()
 
@@ -182,6 +184,8 @@ def main():
         session.commit()
     except Exception as e:
         session.rollback()
+        if args.debug:
+            traceback.print_exc()
         return e
     finally:
         session.close()

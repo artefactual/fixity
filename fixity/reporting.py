@@ -25,7 +25,7 @@ def post_pre_scan_report(aip, start_time, report_url, session_id=None):
 
     check_valid_uuid(aip)
 
-    report = {"start_time": int(time.mktime(start_time.utctimetuple()))}
+    report = {"started": int(time.mktime(start_time.utctimetuple()))}
     if session_id:
         report["session_uuid"] = session_id
     body = json.dumps(report)

@@ -10,7 +10,7 @@ class ReportServiceException(Exception):
     pass
 
 
-def post_pre_scan_report(aip, start_time, report_url, session_id=None):
+def post_pre_scan_report(aip, start_time, report_url, report_auth=(), session_id=None):
     """
     Post a pre-scan report to a remote system.
 
@@ -21,6 +21,8 @@ def post_pre_scan_report(aip, start_time, report_url, session_id=None):
 
     start_time is a datetime object representing the time the scan begun.
     For information on other parameters, see post_success_report.
+
+    report_auth is a tuple of (username, pass)
     """
 
     check_valid_uuid(aip)
@@ -30,13 +32,19 @@ def post_pre_scan_report(aip, start_time, report_url, session_id=None):
         report["session_uuid"] = session_id
     body = json.dumps(report)
 
-    headers = {
-        "Content-Type": "application/json"
+    kwargs = {
+        "data": body,
+        "headers": {
+            "Content-Type": "application/json"
+        }
     }
+    if report_auth:
+        kwargs["auth"] = report_auth
+
     url = report_url + 'api/fixity/{}'.format(aip)
 
     try:
-        response = requests.post(url, data=body, headers=headers)
+        response = requests.post(url, **kwargs)
     except requests.ConnectionError:
         raise ReportServiceException("Unable to connect to report service at URL {}".format(report_url))
 
@@ -46,7 +54,7 @@ def post_pre_scan_report(aip, start_time, report_url, session_id=None):
     return True
 
 
-def post_success_report(aip, report, report_url, session_id=None):
+def post_success_report(aip, report, report_url, report_auth=(), session_id=None):
     """
     POST a JSON fixity scan report to a remote system.
 
@@ -72,13 +80,19 @@ def post_success_report(aip, report, report_url, session_id=None):
         parsed_report["session_uuid"] = session_id
         body = json.dumps(parsed_report)
 
-    headers = {
-        "Content-Type": "application/json"
+    kwargs = {
+        "data": body,
+        "headers": {
+            "Content-Type": "application/json"
+        }
     }
+    if report_auth:
+        kwargs["auth"] = report_auth
+
     url = report_url + 'api/fixity/{}'.format(aip)
 
     try:
-        response = requests.post(url, data=body, headers=headers)
+        response = requests.post(url, **kwargs)
     except requests.ConnectionError:
         report.posted = False
         raise ReportServiceException("Unable to connect to report service at URL {}".format(report_url))

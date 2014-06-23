@@ -50,13 +50,21 @@ def fetch_environment_variables(namespace):
     if not namespace.report_url.endswith('/'):
         namespace.report_url = namespace.report_url + '/'
 
+    # These two parameters are optional; not all reporting services
+    # require any authentication.
+    try:
+        namespace.report_user = os.environ['REPORT_USERNAME']
+        namespace.report_pass = os.environ['REPORT_PASSWORD']
+    except KeyError:
+        namespace.report_user = namespace.report_pass = None
+
 
 def scan_message(aip_uuid, status):
     succeeded = "succeeded" if status else "failed"
     return "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
 
 
-def scan(aip, ss_url, session, report_url=None, session_id=None):
+def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None):
     """
     Instruct the storage service to scan a single AIP.
 
@@ -82,7 +90,8 @@ def scan(aip, ss_url, session, report_url=None, session_id=None):
     try:
         reporting.post_pre_scan_report(
             aip, start_time,
-            report_url=report_url, session_id=session_id
+            report_url=report_url, report_auth=report_auth,
+            session_id=session_id
         )
     except reporting.ReportServiceException:
         print(
@@ -107,7 +116,7 @@ def scan(aip, ss_url, session, report_url=None, session_id=None):
             report = None
 
     if report_url and report:
-        if not reporting.post_success_report(aip, report, report_url, session_id=session_id):
+        if not reporting.post_success_report(aip, report, report_url, report_auth=report_auth, session_id=session_id):
             print("Unable to POST report for AIP {} to remote service".format(aip),
                   file=sys.stderr)
 
@@ -117,7 +126,7 @@ def scan(aip, ss_url, session, report_url=None, session_id=None):
     return status
 
 
-def scanall(ss_url, session, report_url=None, throttle_time=0):
+def scanall(ss_url, session, report_url=None, report_auth=(), throttle_time=0):
     """
     Run a fixity scan on every AIP in a storage service instance.
 
@@ -171,17 +180,24 @@ def main():
 
     status = False
 
+    if args.report_user and args.report_pass:
+        auth = (args.report_user, args.report_pass)
+    else:
+        auth = ()
+
     try:
         if args.command == 'scanall':
             status = scanall(
                 args.ss_url, session,
-                report_url=args.report_url, throttle_time=args.throttle
+                report_url=args.report_url, report_auth=auth,
+                throttle_time=args.throttle
             )
         elif args.command == 'scan':
             session_id = str(uuid4())
             status = scan(
                 args.aip, args.ss_url, session,
-                report_url=args.report_url, session_id=session_id
+                report_url=args.report_url, report_auth=auth,
+                session_id=session_id
             )
         else:
             return Exception('Error: "{}" is not a valid command.'.format(args.command))

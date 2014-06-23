@@ -38,3 +38,9 @@ The following environment variables **must** be exported in the environment for 
 
   * **REPORT_URL**:
     The base URL to the remote service to which scan reports will be POSTed.
+
+  * **REPORT_USERNAME**:
+    Username for API authentication with the reporting service. Not all reporting services require API authentication; leave this unset if API access is unauthenticated.
+
+  * **REPORT_PASSWORD**:
+    Password for API authentication with the reporting service; see above.

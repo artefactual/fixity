@@ -34,16 +34,21 @@ def parse_arguments():
     return args
 
 
-def fetch_environment_variables(namespace):
+def _get_environment_variable(var):
     try:
-        namespace.ss_url = os.environ['STORAGE_SERVICE_URL']
-        if not namespace.ss_url.endswith('/'):
-            namespace.ss_url = namespace.ss_url + '/'
-        namespace.report_url = os.environ['REPORT_URL']
-        if not namespace.report_url.endswith('/'):
-            namespace.report_url = namespace.report_url + '/'
-    except KeyError:
-        raise ArgumentError('Error: A required environment variable was not set')
+        return os.environ[var]
+    except KeyError as e:
+        raise ArgumentError("Missing environment variable: {}".format(e.args[0]))
+
+
+def fetch_environment_variables(namespace):
+    namespace.ss_url = _get_environment_variable('STORAGE_SERVICE_URL')
+    if not namespace.ss_url.endswith('/'):
+        namespace.ss_url = namespace.ss_url + '/'
+
+    namespace.report_url = _get_environment_variable('REPORT_URL')
+    if not namespace.report_url.endswith('/'):
+        namespace.report_url = namespace.report_url + '/'
 
 
 def scan_message(aip_uuid, status):

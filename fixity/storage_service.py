@@ -26,16 +26,16 @@ class StorageServiceError(Exception):
         super(StorageServiceError, self).__init__(message)
 
 
-def get_all_aips(ss_url):
-    """
-    Returns a list of all AIPs stored in a storage service installation.
-    Each AIP in the list is a dict as returned by the storage
-    service API.
-    """
+def _get_aips(ss_url, count=None):
+    kwargs = {}
+    if count:
+        kwargs["params"] = {
+            "count": count
+        }
 
     url = ss_url + 'api/v2/file/'
     try:
-        response = requests.get(url)
+        response = requests.get(url, **kwargs)
     except requests.ConnectionError:
         raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
 
@@ -45,19 +45,30 @@ def get_all_aips(ss_url):
         raise StorageServiceError('Storage service at "{}" encountered a gateway timeout while requesting AIPs'.format(ss_url))
     elif response.status_code != 200:
         raise StorageServiceError('Storage service at "{}" returned {} while requesting AIPs'.format(ss_url, response.status_code))
+
     results = response.json()
+    filtered_aips = [aip for aip in results['objects'] if aip['package_type'] == 'AIP' and aip['status'] == u"UPLOADED"]
+    results["objects"] = filtered_aips
+    return results
+
+
+def get_all_aips(ss_url):
+    """
+    Returns a list of all AIPs stored in a storage service installation.
+    Each AIP in the list is a dict as returned by the storage
+    service API.
+    """
+
+    results = _get_aips(ss_url)
     limit = results['meta']['limit']
     count = results['meta']['limit']
-    aips = [aip for aip in results['objects'] if aip['package_type'] == 'AIP']
+    aips = results["objects"]
 
     while count < results['meta']['total_count']:
-        params = {'count': str(count + limit)}
-        response = requests.get(url, params=params)
-
-        results = response.json()
+        results = _get_aips(ss_url, count=str(count + limit))
         count += limit
 
-        aips.extend([aip for aip in results['objects'] if aip['package_type'] == 'AIP'])
+        aips.extend(results["objects"])
 
     return aips
 

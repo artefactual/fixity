@@ -74,6 +74,13 @@ def test_get_all_aips():
         assert aip['uuid'] in aip_uuids
 
 
+@vcr.use_cassette('fixtures/vcr_cassettes/all_aips_uploaded_only.yaml')
+def test_get_all_aips_gets_uploaded_aips_only():
+    aips = storage_service.get_all_aips(STORAGE_SERVICE_URL)
+    non_uploaded = filter(lambda a: a['status'] != u"UPLOADED", aips)
+    assert len(non_uploaded) == 0
+
+
 @vcr.use_cassette('fixtures/vcr_cassettes/all_aips_500.yaml')
 def test_get_all_aips_raises_on_500():
     with pytest.raises(storage_service.StorageServiceError) as ex:

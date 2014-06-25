@@ -155,13 +155,16 @@ def scanall(ss_url, session, report_url=None, report_auth=(), throttle_time=0):
         return e
     count = len(aips)
     for aip in aips:
-        scan_success = scan(
-            aip['uuid'], ss_url, session,
-            report_url=report_url, report_auth=report_auth,
-            session_id=session_id
-        )
-        if not scan_success:
-            success = False
+        try:
+            scan_success = scan(
+                aip['uuid'], ss_url, session,
+                report_url=report_url, report_auth=report_auth,
+                session_id=session_id
+            )
+            if not scan_success:
+                success = False
+        except Exception as e:
+            print("Internal error encountered while scanning AIP {} ({})".format(aip['uuid'], type(e).__name__))
 
         if throttle_time:
             sleep(throttle_time)

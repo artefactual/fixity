@@ -141,6 +141,14 @@ def test_fixity_scan_raises_on_500():
     assert "internal error" in ex.value.message
 
 
+@vcr.use_cassette('fixtures/vcr_cassettes/fixity_non_200.yaml')
+def test_fixity_scan_raises_on_non_200():
+    with pytest.raises(storage_service.StorageServiceError) as ex:
+        storage_service.scan_aip('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', STORAGE_SERVICE_URL, SESSION)
+
+    assert "returned 504" in ex.value.message
+
+
 def test_fixity_scan_raises_on_invalid_url():
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.scan_aip('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', "http://foo", SESSION)

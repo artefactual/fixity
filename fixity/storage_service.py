@@ -186,6 +186,18 @@ def scan_aip(aip_uuid, ss_url, session, start_time=None):
             'Storage service at \"{}\" encountered an internal error while scanning AIP {}'.format(ss_url, aip.uuid),
             report=report
         )
+    if response.status_code != 200:
+        json_report = {
+            "success": None,
+            "message": "Storage service returned {}".format(response.status_code),
+            "started": begun_int,
+            "finished": ended_int
+        }
+        report = create_report(aip, None, begun, ended, json.dumps(json_report))
+        raise StorageServiceError(
+            'Storage service at \"{}\" returned {} while scanning AIP {}'.format(ss_url, response.status_code, aip.uuid),
+            report=report
+        )
 
     report = response.json()
     report["started"] = begun_int

@@ -160,12 +160,6 @@ def scan_aip(aip_uuid, ss_url, session, start_time=None):
     begun_int = int(time.mktime(begun.utctimetuple()))
     ended_int = int(time.mktime(ended.utctimetuple()))
 
-    report = response.json()
-    report["started"] = begun_int
-    report["finished"] = ended_int
-    if not "success" in report:
-        report["success"] = None
-
     # Typically occurs if the storage service is unable to find the
     # requested AIP, or if the requested API call is not available.
     if response.status_code == 404:
@@ -192,6 +186,12 @@ def scan_aip(aip_uuid, ss_url, session, start_time=None):
             'Storage service at \"{}\" encountered an internal error while scanning AIP {}'.format(ss_url, aip.uuid),
             report=report
         )
+
+    report = response.json()
+    report["started"] = begun_int
+    report["finished"] = ended_int
+    if not "success" in report:
+        report["success"] = None
 
     success = report.get('success', None)
     report_string = json.dumps(report)

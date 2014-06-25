@@ -127,7 +127,9 @@ def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None)
             )
 
     if report_url:
-        if not reporting.post_success_report(aip, report, report_url, report_auth=report_auth, session_id=session_id):
+        try:
+            reporting.post_success_report(aip, report, report_url, report_auth=report_auth, session_id=session_id)
+        except reporting.ReportServiceException:
             print("Unable to POST report for AIP {} to remote service".format(aip),
                   file=sys.stderr)
 

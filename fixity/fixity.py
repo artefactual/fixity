@@ -1,13 +1,14 @@
 from __future__ import print_function
 from argparse import ArgumentParser
 from datetime import datetime
+import json
 import os
 import sys
 from uuid import uuid4
 from time import sleep
 import traceback
 
-from models import AIP, Session
+from models import Report, Session
 import reporting
 import storage_service
 from utils import InvalidUUID
@@ -111,17 +112,24 @@ def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None)
         if hasattr(e, 'report') and e.report:
             report = e.report
         # Certain classes of exceptions will not return reports because no
-        # scan was even attempted; nothing to POST in that case.
+        # scan was even attempted; report the exception in that case.
         else:
-            report = None
+            report_dict = {
+                "success": "None",
+                "message": "Exception encountered while scanning AIP {}: {} ({})".format(aip, type(e).__name__, e.message),
+                "traceback": traceback.format_exc(),
+                "errors": None
+            }
 
-    if report_url and report:
+            report = Report(
+                aip_id=aip, report=json.dumps(report_dict), success=None,
+                begun=start_time, ended=start_time, posted=False
+            )
+
+    if report_url:
         if not reporting.post_success_report(aip, report, report_url, report_auth=report_auth, session_id=session_id):
             print("Unable to POST report for AIP {} to remote service".format(aip),
                   file=sys.stderr)
-
-    if report:
-        session.add(report)
 
     return status
 

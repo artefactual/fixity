@@ -1,5 +1,5 @@
+import calendar
 import json
-import time
 
 from utils import check_valid_uuid
 
@@ -27,7 +27,7 @@ def post_pre_scan_report(aip, start_time, report_url, report_auth=(), session_id
 
     check_valid_uuid(aip)
 
-    report = {"started": int(time.mktime(start_time.utctimetuple()))}
+    report = {"started": int(calendar.timegm(start_time.utctimetuple()))}
     if session_id:
         report["session_uuid"] = session_id
     body = json.dumps(report)

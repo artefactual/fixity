@@ -1,6 +1,6 @@
+import calendar
 from datetime import datetime
 import json
-import time
 
 import requests
 from sqlalchemy.orm.exc import NoResultFound
@@ -157,8 +157,8 @@ def scan_aip(aip_uuid, ss_url, session, start_time=None):
         raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
     ended = datetime.utcnow()
 
-    begun_int = int(time.mktime(begun.utctimetuple()))
-    ended_int = int(time.mktime(ended.utctimetuple()))
+    begun_int = int(calendar.timegm(begun.utctimetuple()))
+    ended_int = int(calendar.timegm(ended.utctimetuple()))
 
     # Typically occurs if the storage service is unable to find the
     # requested AIP, or if the requested API call is not available.

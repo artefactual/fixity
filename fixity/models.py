@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship, backref, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 db_path = os.path.join(os.path.dirname(__file__), 'fixity.db')
-engine = create_engine('sqlite:////{}'.format(db_path), echo=False)
+engine = create_engine('sqlite:///{}'.format(db_path), echo=False)
 
 Session = sessionmaker(bind=engine)
 Base = declarative_base()

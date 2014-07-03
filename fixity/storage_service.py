@@ -26,16 +26,10 @@ class StorageServiceError(Exception):
         super(StorageServiceError, self).__init__(message)
 
 
-def _get_aips(ss_url, count=None):
-    kwargs = {}
-    if count:
-        kwargs["params"] = {
-            "count": count
-        }
-
-    url = ss_url + 'api/v2/file/'
+def _get_aips(ss_url, uri='api/v2/file/'):
+    url = ss_url + uri
     try:
-        response = requests.get(url, **kwargs)
+        response = requests.get(url)
     except requests.ConnectionError:
         raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
 
@@ -60,14 +54,13 @@ def get_all_aips(ss_url):
     """
 
     results = _get_aips(ss_url)
-    limit = results['meta']['limit']
-    count = results['meta']['limit']
     aips = results["objects"]
 
-    while count < results['meta']['total_count']:
-        results = _get_aips(ss_url, count=str(count + limit))
-        count += limit
-
+    # The "next" key contains a prebuilt URL with query
+    # parameters to the next set of items; use that to keep
+    # iterating until we hit the end of the available AIPs.
+    while results["meta"]["next"] is not None:
+        results = _get_aips(ss_url, results["meta"]["next"][1:])
         aips.extend(results["objects"])
 
     return aips

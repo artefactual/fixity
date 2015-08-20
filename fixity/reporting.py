@@ -80,6 +80,11 @@ def post_success_report(aip, report, report_url, report_auth=(), session_id=None
         parsed_report["session_uuid"] = session_id
         body = json.dumps(parsed_report)
 
+    # print report to stdout
+    des_report = json.loads(body)
+    print ("AIP: %s" % aip)
+    print ("%s" % json.dumps(des_report, indent=4))
+
     kwargs = {
         "data": body,
         "headers": {

@@ -46,9 +46,10 @@ def fetch_environment_variables(namespace):
     if not namespace.ss_url.endswith('/'):
         namespace.ss_url = namespace.ss_url + '/'
 
-    namespace.report_url = _get_environment_variable('REPORT_URL')
-    if not namespace.report_url.endswith('/'):
-        namespace.report_url = namespace.report_url + '/'
+    if 'REPORT_URL' in os.environ:
+        namespace.report_url = _get_environment_variable('REPORT_URL')
+        if not namespace.report_url.endswith('/'):
+            namespace.report_url = namespace.report_url + '/'
 
     # These two parameters are optional; not all reporting services
     # require any authentication.
@@ -88,11 +89,12 @@ def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None)
     start_time = datetime.utcnow()
 
     try:
-        reporting.post_pre_scan_report(
-            aip, start_time,
-            report_url=report_url, report_auth=report_auth,
-            session_id=session_id
-        )
+        if report_url:
+            reporting.post_pre_scan_report(
+                aip, start_time,
+                report_url=report_url, report_auth=report_auth,
+                session_id=session_id
+            )
     except reporting.ReportServiceException:
         print(
             "Unable to POST pre-scan report to {}".format(report_url),
@@ -199,17 +201,19 @@ def main():
         auth = ()
 
     try:
+        report_url = 'report_url' in args or None
+
         if args.command == 'scanall':
             status = scanall(
                 args.ss_url, session,
-                report_url=args.report_url, report_auth=auth,
+                report_url=report_url, report_auth=auth,
                 throttle_time=args.throttle
             )
         elif args.command == 'scan':
             session_id = str(uuid4())
             status = scan(
                 args.aip, args.ss_url, session,
-                report_url=args.report_url, report_auth=auth,
+                report_url=report_url, report_auth=auth,
                 session_id=session_id
             )
         else:

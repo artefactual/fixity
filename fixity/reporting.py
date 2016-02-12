@@ -1,7 +1,7 @@
 import calendar
 import json
 
-from utils import check_valid_uuid
+from .utils import check_valid_uuid
 
 import requests
 

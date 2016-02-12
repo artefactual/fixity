@@ -5,8 +5,8 @@ import json
 import requests
 from sqlalchemy.orm.exc import NoResultFound
 
-from models import AIP, Report
-from utils import check_valid_uuid
+from .models import AIP, Report
+from .utils import check_valid_uuid
 
 
 UNABLE_TO_CONNECT_ERROR = "Unable to connect to storage service instance at {} (is it running?)"

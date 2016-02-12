@@ -11,7 +11,6 @@ import traceback
 from models import Report, Session
 import reporting
 import storage_service
-from utils import InvalidUUID
 
 
 class ArgumentError(Exception):

@@ -27,7 +27,7 @@ def test_single_aip_raises_on_404():
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_single_aip('ba31d9b8-5baa-4d62-839e-cf71497d4acf', STORAGE_SERVICE_URL)
 
-    assert "returned 404" in ex.value.message
+    assert "returned 404" in str(ex.value)
     assert ex.value.report is None
 
 
@@ -36,7 +36,7 @@ def test_single_aip_raises_on_500():
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_single_aip('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', STORAGE_SERVICE_URL)
 
-    assert "internal error" in ex.value.message
+    assert "internal error" in str(ex.value)
     assert ex.value.report is None
 
 
@@ -45,7 +45,7 @@ def test_single_aip_raises_on_504():
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_single_aip('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', STORAGE_SERVICE_URL)
 
-    assert "gateway timeout" in ex.value.message
+    assert "gateway timeout" in str(ex.value)
     assert ex.value.report is None
 
 
@@ -58,7 +58,7 @@ def test_single_aip_raises_with_invalid_url():
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_single_aip('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', "http://foo")
 
-    assert "Unable to connect" in ex.value.message
+    assert "Unable to connect" in str(ex.value)
 
 
 ### All AIPs
@@ -77,7 +77,7 @@ def test_get_all_aips():
 @vcr.use_cassette('fixtures/vcr_cassettes/all_aips_uploaded_only.yaml')
 def test_get_all_aips_gets_uploaded_aips_only():
     aips = storage_service.get_all_aips(STORAGE_SERVICE_URL)
-    non_uploaded = filter(lambda a: a['status'] != u"UPLOADED", aips)
+    non_uploaded = list(filter(lambda a: a['status'] != u"UPLOADED", aips))
     assert len(non_uploaded) == 0
 
 
@@ -86,7 +86,7 @@ def test_get_all_aips_raises_on_500():
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_all_aips(STORAGE_SERVICE_URL)
 
-    assert "internal error" in ex.value.message
+    assert "internal error" in str(ex.value)
     assert ex.value.report is None
 
 
@@ -95,7 +95,7 @@ def test_get_all_aips_raises_on_504():
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_all_aips(STORAGE_SERVICE_URL)
 
-    assert "gateway timeout" in ex.value.message
+    assert "gateway timeout" in str(ex.value)
     assert ex.value.report is None
 
 
@@ -103,7 +103,7 @@ def test_get_all_aips_raises_with_invalid_url():
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_all_aips("http://foo")
 
-    assert "Unable to connect" in ex.value.message
+    assert "Unable to connect" in str(ex.value)
 
 
 ### Fixity scan
@@ -138,7 +138,7 @@ def test_fixity_scan_raises_on_500():
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.scan_aip('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', STORAGE_SERVICE_URL, SESSION)
 
-    assert "internal error" in ex.value.message
+    assert "internal error" in str(ex.value)
 
 
 @vcr.use_cassette('fixtures/vcr_cassettes/fixity_non_200.yaml')
@@ -146,11 +146,11 @@ def test_fixity_scan_raises_on_non_200():
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.scan_aip('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', STORAGE_SERVICE_URL, SESSION)
 
-    assert "returned 504" in ex.value.message
+    assert "returned 504" in str(ex.value)
 
 
 def test_fixity_scan_raises_on_invalid_url():
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.scan_aip('a7f2a05b-0fdf-42f1-a46c-4522a831cf17', "http://foo", SESSION)
 
-    assert "Unable to connect" in ex.value.message
+    assert "Unable to connect" in str(ex.value)

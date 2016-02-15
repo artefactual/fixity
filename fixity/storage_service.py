@@ -193,8 +193,14 @@ def scan_aip(aip_uuid, ss_url, session, start_time=None):
         )
 
     report = response.json()
-    report["started"] = begun_int
-    report["finished"] = ended_int
+    if report.get('timestamp'):
+        timestamp = datetime.strptime(report['timestamp'], "%Y-%m-%dT%H:%M:%S")
+        timestamp = int(calendar.timegm(timestamp.utctimetuple()))
+        report["started"] = timestamp
+        report["finished"] = timestamp
+    else:
+        report["started"] = begun_int
+        report["finished"] = ended_int
     if "success" not in report:
         report["success"] = None
 

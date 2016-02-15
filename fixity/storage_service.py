@@ -92,8 +92,8 @@ def get_single_aip(uuid, ss_url):
 def create_report(aip, success, begun, ended, report_string):
     return Report(
         aip=aip,
-        begun=None,
-        ended=None,
+        begun=begun,
+        ended=ended,
         success=success,
         report=report_string
     )
@@ -195,7 +195,7 @@ def scan_aip(aip_uuid, ss_url, session, start_time=None):
     report = response.json()
     report["started"] = begun_int
     report["finished"] = ended_int
-    if not "success" in report:
+    if "success" not in report:
         report["success"] = None
 
     success = report.get('success', None)

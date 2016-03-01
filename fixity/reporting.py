@@ -71,6 +71,8 @@ def post_success_report(aip, report, report_url, report_auth=(), session_id=None
     This is an optional parameter, but some reporting services will require it.
     (For instance, the DRMC requires this to be POSTed with every report.)
     """
+    if report and report.success is None:
+        return None
     check_valid_uuid(aip)
 
     body = report.report

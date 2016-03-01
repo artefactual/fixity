@@ -148,3 +148,18 @@ def test_posting_success_report_posted_is_false_on_raise():
         pass
 
     assert report.posted is False
+
+def test_posting_success_report_success_none():
+    json_report = json_string("test_failed_report.json")
+    aip = AIP(
+        uuid="ed42aadc-d854-46c6-b455-cd384eef1618"
+    )
+    report = Report(
+        aip=aip,
+        begun=datetime.fromtimestamp(1400022946),
+        ended=datetime.fromtimestamp(1400023208),
+        success=None,
+        posted=False,
+        report=json_report
+    )
+    assert reporting.post_success_report(aip.uuid, report, REPORT_URL) is None

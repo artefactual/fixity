@@ -44,8 +44,6 @@ Usage
 
 For more information on usage, consult the [manpage](docs/fixity.1.md).
 
-
-
 Copyright
 ---------
 

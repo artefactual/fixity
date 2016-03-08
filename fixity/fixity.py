@@ -60,7 +60,14 @@ def fetch_environment_variables(namespace):
 
 
 def scan_message(aip_uuid, status):
-    succeeded = "succeeded" if status else "failed"
+    if status is True:
+        succeeded = 'succeeded'
+    elif status is False:
+        succeeded = 'failed'
+    elif status is None:
+        succeeded = "didn't run"
+    else:
+        succeeded = 'returned an unknown status'
     return "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
 
 

@@ -18,6 +18,9 @@ fixity requires several environment variables to be exported when it is running;
   * `--throttle` <seconds>:
     Time (in seconds) to wait when scanning multiple AIPs. This can help reduce extended disk load on the filesystem on which the AIPs reside.
 
+  * `--debug`:
+    Print extra debugging output.
+
 ## COMMANDS
 
   * `scan` <UUID>:

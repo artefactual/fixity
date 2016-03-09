@@ -8,7 +8,7 @@ The Archivematica Storage Service provides a REST API endpoint for checking fixi
 Usage
 -----
 
-For more information on usage, consult the manpage.
+For more information on usage, consult the [manpage](docs/fixity.1.md).
 
 Copyright
 ---------

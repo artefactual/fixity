@@ -31,6 +31,8 @@ def parse_arguments():
         help='Print extra debugging output.')
     parser.add_argument('--throttle', type=int, default=0,
         help='Time in seconds to wait between scanning multiple AIPs.')
+    parser.add_argument('--force-local', action='store_true',
+        help="Force a local fixity check on the Storage Service.")
     args = parser.parse_args()
 
     validate_arguments(args)
@@ -74,7 +76,7 @@ def scan_message(aip_uuid, status):
     return "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
 
 
-def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None):
+def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None, force_local=False):
     """
     Instruct the storage service to scan a single AIP.
 
@@ -87,6 +89,7 @@ def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None)
     :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be     transmitted.
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param session_id: Identifier for this session, allowing every scan from one run to be identified.
+    :param bool force_local: If True, will will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
     """
 
     # Ensure the storage service knows about this AIP first;
@@ -112,7 +115,8 @@ def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None)
     try:
         status, report = storage_service.scan_aip(
             aip, ss_url, session,
-            start_time=start_time
+            start_time=start_time,
+            force_local=force_local,
         )
         print(scan_message(aip, status), file=sys.stderr)
     except Exception as e:
@@ -145,7 +149,7 @@ def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None)
     return status
 
 
-def scanall(ss_url, session, report_url=None, report_auth=(), throttle_time=0):
+def scanall(ss_url, session, report_url=None, report_auth=(), throttle_time=0, force_local=False):
     """
     Run a fixity scan on every AIP in a storage service instance.
 
@@ -153,6 +157,7 @@ def scanall(ss_url, session, report_url=None, report_auth=(), throttle_time=0):
     :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be transmitted.
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param int throttle_time: Time to wait between scans.
+    :param bool force_local: If True, will will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
     """
     success = True
 
@@ -170,7 +175,7 @@ def scanall(ss_url, session, report_url=None, report_auth=(), throttle_time=0):
             scan_success = scan(
                 aip['uuid'], ss_url, session,
                 report_url=report_url, report_auth=report_auth,
-                session_id=session_id
+                session_id=session_id, force_local=force_local,
             )
             if not scan_success:
                 success = False
@@ -213,14 +218,14 @@ def main():
             status = scanall(
                 args.ss_url, session,
                 report_url=args.report_url, report_auth=auth,
-                throttle_time=args.throttle
+                throttle_time=args.throttle, force_local=args.force_local
             )
         elif args.command == 'scan':
             session_id = str(uuid4())
             status = scan(
                 args.aip, args.ss_url, session,
                 report_url=args.report_url, report_auth=auth,
-                session_id=session_id
+                session_id=session_id, force_local=args.force_local,
             )
         else:
             return Exception('Error: "{}" is not a valid command.'.format(args.command))

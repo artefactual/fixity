@@ -99,7 +99,7 @@ def create_report(aip, success, begun, ended, report_string):
     )
 
 
-def scan_aip(aip_uuid, ss_url, session, start_time=None):
+def scan_aip(aip_uuid, ss_url, session, start_time=None, force_local=False):
     """
     Scans fixity for the given AIP.
 
@@ -118,6 +118,9 @@ def scan_aip(aip_uuid, ss_url, session, start_time=None):
     be calculated immediately before the scan begins. This should be
     passed in the case that a pre-scan report will be POSTed to a server,
     in which case both reports should have the identical time.
+
+    force_local, if True, will request the Storage Service to perform a local
+    fixity check, instead of using the Space's fixity (if available).
 
     A tuple of (success, report) is returned.
 
@@ -144,8 +147,12 @@ def scan_aip(aip_uuid, ss_url, session, start_time=None):
     else:
         begun = start_time
 
+    params = None
+    if force_local:
+        params = {'force_local': force_local}
+
     try:
-        response = requests.get(ss_url + 'api/v2/file/' + aip.uuid + '/check_fixity/')
+        response = requests.get(ss_url + 'api/v2/file/' + aip.uuid + '/check_fixity/', params=params)
     except requests.ConnectionError:
         raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
     ended = datetime.utcnow()

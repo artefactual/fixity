@@ -24,10 +24,13 @@ def validate_arguments(args):
 
 def parse_arguments():
     parser = ArgumentParser()
-    parser.add_argument('command')
-    parser.add_argument('aip', nargs='?')
-    parser.add_argument('-d', '--debug', action='store_true')
-    parser.add_argument('--throttle', type=int, default=0)
+    parser.add_argument('command', choices=['scan', 'scanall'],
+        help='Command to run.')
+    parser.add_argument('aip', nargs='?', help="If 'scan', UUID of the AIP to scan")
+    parser.add_argument('-d', '--debug', action='store_true',
+        help='Print extra debugging output.')
+    parser.add_argument('--throttle', type=int, default=0,
+        help='Time in seconds to wait between scanning multiple AIPs.')
     args = parser.parse_args()
 
     validate_arguments(args)
@@ -79,11 +82,11 @@ def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None)
     to ensure the storage service still has a record of it, then
     runs a fixity scan.
 
-    aip should be an AIP UUID string.
-    ss_url should be the base URL to a storage service installation.
-    report_url can be the base URL to a server to which the report will
-    be POSTed after the scan completes. If absent, the report will not be
-    transmitted.
+    :param str aip: AIP UUID string.
+    :param str ss_url: The base URL to a storage service installation.
+    :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be     transmitted.
+    :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
+    :param session_id: Identifier for this session, allowing every scan from one run to be identified.
     """
 
     # Ensure the storage service knows about this AIP first;
@@ -146,10 +149,10 @@ def scanall(ss_url, session, report_url=None, report_auth=(), throttle_time=0):
     """
     Run a fixity scan on every AIP in a storage service instance.
 
-    ss_url should be the base URL to a storage service installation.
-    report_url can be the base URL to a server to which the report will
-    be POSTed after the scan completes. If absent, the report will not be
-    transmitted.
+    :param str ss_url: The base URL to a storage service installation.
+    :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be transmitted.
+    :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
+    :param int throttle_time: Time to wait between scans.
     """
     success = True
 

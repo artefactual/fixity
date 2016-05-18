@@ -61,10 +61,12 @@ def fetch_environment_variables(namespace):
         namespace.report_user = namespace.report_pass = None
 
 
-def scan_message(aip_uuid, status):
+def scan_message(aip_uuid, status, message):
     succeeded = "succeeded" if status else "failed"
-    return "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
-
+    output = "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
+    if message:
+        output += ' ({})'.format(message)
+    return output
 
 def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None):
     """
@@ -107,7 +109,8 @@ def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None)
             aip, ss_url, session,
             start_time=start_time
         )
-        print(scan_message(aip, status), file=sys.stderr)
+        report_data = json.loads(report.report)
+        print(scan_message(aip, status, report_data['message']), file=sys.stderr)
     except Exception as e:
         print(e.message, file=sys.stderr)
         status = None

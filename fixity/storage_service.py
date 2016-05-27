@@ -26,10 +26,11 @@ class StorageServiceError(Exception):
         super(StorageServiceError, self).__init__(message)
 
 
-def _get_aips(ss_url, uri='api/v2/file/'):
+def _get_aips(ss_url, ss_user, ss_key, uri='api/v2/file/'):
     url = ss_url + uri
+    params = {'username': ss_user, 'api_key': ss_key}
     try:
-        response = requests.get(url)
+        response = requests.get(url, params=params)
     except requests.ConnectionError:
         raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
 
@@ -37,6 +38,8 @@ def _get_aips(ss_url, uri='api/v2/file/'):
         raise StorageServiceError('Storage service at "{}" encountered an internal error while requesting AIPs'.format(ss_url))
     elif response.status_code == 504:
         raise StorageServiceError('Storage service at "{}" encountered a gateway timeout while requesting AIPs'.format(ss_url))
+    elif response.status_code == 401:
+        raise StorageServiceError('Storage service at "{}" failed authentication while requesting AIPs'.format(ss_url))
     elif response.status_code != 200:
         raise StorageServiceError('Storage service at "{}" returned {} while requesting AIPs'.format(ss_url, response.status_code))
 
@@ -46,27 +49,27 @@ def _get_aips(ss_url, uri='api/v2/file/'):
     return results
 
 
-def get_all_aips(ss_url):
+def get_all_aips(ss_url, ss_user, ss_key):
     """
     Returns a list of all AIPs stored in a storage service installation.
     Each AIP in the list is a dict as returned by the storage
     service API.
     """
 
-    results = _get_aips(ss_url)
+    results = _get_aips(ss_url, ss_user, ss_key)
     aips = results["objects"]
 
     # The "next" key contains a prebuilt URL with query
     # parameters to the next set of items; use that to keep
     # iterating until we hit the end of the available AIPs.
     while results["meta"]["next"] is not None:
-        results = _get_aips(ss_url, results["meta"]["next"][1:])
+        results = _get_aips(ss_url, ss_user, ss_key, uri=results["meta"]["next"][1:])
         aips.extend(results["objects"])
 
     return aips
 
 
-def get_single_aip(uuid, ss_url):
+def get_single_aip(uuid, ss_url, ss_user, ss_key):
     """
     Fetch detailed information on an AIP from the storage service.
 
@@ -75,8 +78,9 @@ def get_single_aip(uuid, ss_url):
     """
     check_valid_uuid(uuid)
 
+    params = {'username': ss_user, 'api_key': ss_key}
     try:
-        response = requests.get(ss_url + 'api/v2/file/' + uuid + '/')
+        response = requests.get(ss_url + 'api/v2/file/' + uuid + '/', params=params)
     except requests.ConnectionError:
         raise(StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url)))
 
@@ -84,6 +88,8 @@ def get_single_aip(uuid, ss_url):
         raise StorageServiceError('Storage service at "{}" encountered an internal error while requesting AIP with UUID {}'.format(ss_url, uuid))
     elif response.status_code == 504:
         raise StorageServiceError('Storage service at "{}" encounterd a gateway timeout while requesting AIP with UUID {}'.format(ss_url, uuid))
+    elif response.status_code == 401:
+        raise StorageServiceError('Storage service at "{}" failed authentication while requesting AIP with UUID {}'.format(ss_url, uuid))
     if response.status_code != 200:
         raise StorageServiceError('Storage service at "{}" returned {} while requesting AIP with UUID {}'.format(ss_url, response.status_code, uuid))
     return response.json()
@@ -99,7 +105,7 @@ def create_report(aip, success, begun, ended, report_string):
     )
 
 
-def scan_aip(aip_uuid, ss_url, session, start_time=None):
+def scan_aip(aip_uuid, ss_url, ss_user, ss_key, session, start_time=None):
     """
     Scans fixity for the given AIP.
 
@@ -144,8 +150,9 @@ def scan_aip(aip_uuid, ss_url, session, start_time=None):
     else:
         begun = start_time
 
+    params = {'username': ss_user, 'api_key': ss_key}
     try:
-        response = requests.get(ss_url + 'api/v2/file/' + aip.uuid + '/check_fixity/')
+        response = requests.get(ss_url + 'api/v2/file/' + aip.uuid + '/check_fixity/', params=params)
     except requests.ConnectionError:
         raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
     ended = datetime.utcnow()
@@ -177,6 +184,18 @@ def scan_aip(aip_uuid, ss_url, session, start_time=None):
         report = create_report(aip, None, begun, ended, json.dumps(json_report))
         raise StorageServiceError(
             'Storage service at \"{}\" encountered an internal error while scanning AIP {}'.format(ss_url, aip.uuid),
+            report=report
+        )
+    if response.status_code == 401:
+        json_report = {
+            "success": None,
+            "message": "Storage service returned 401",
+            "started": begun_int,
+            "finished": ended_int
+        }
+        report = create_report(aip, None, begun, ended, json.dumps(json_report))
+        raise StorageServiceError(
+            'Storage service at \"{}\" failed authentication while scanning AIP {}'.format(ss_url, aip.uuid),
             report=report
         )
     if response.status_code != 200:

@@ -6,7 +6,7 @@ interactions:
       Accept-Encoding: ['gzip, deflate, compress']
       User-Agent: [python-requests/2.2.1 CPython/2.7.3 Linux/3.2.0-61-generic]
     method: GET
-    uri: http://localhost:8000/api/v2/file/c8ebb75e-6b7a-46dd-a360-91d3753d7b72/check_fixity/
+    uri: http://localhost:8000/api/v2/file/c8ebb75e-6b7a-46dd-a360-91d3753d7b72/check_fixity/?username=test&api_key=dfe83300db5f05f63157f772820bb028bd4d0e27
   response:
     body: {string: !!python/unicode '{"failures": {"files": {"untracked": [], "changed":
         [], "missing": []}}, "message": "", "success": true}'}

@@ -8,9 +8,9 @@ from uuid import uuid4
 from time import sleep
 import traceback
 
-from models import Report, Session
-import reporting
-import storage_service
+from .models import Report, Session
+from . import reporting
+from . import storage_service
 
 
 class ArgumentError(Exception):
@@ -48,6 +48,8 @@ def fetch_environment_variables(namespace):
     namespace.ss_url = _get_environment_variable('STORAGE_SERVICE_URL')
     if not namespace.ss_url.endswith('/'):
         namespace.ss_url = namespace.ss_url + '/'
+    namespace.ss_user = _get_environment_variable('STORAGE_SERVICE_USER')
+    namespace.ss_key = _get_environment_variable('STORAGE_SERVICE_KEY')
 
     if 'REPORT_URL' in os.environ:
         namespace.report_url = _get_environment_variable('REPORT_URL')
@@ -70,7 +72,7 @@ def scan_message(aip_uuid, status, message):
         output += ' ({})'.format(message)
     return output
 
-def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None):
+def scan(aip, ss_url, ss_user, ss_key, session, report_url=None, report_auth=(), session_id=None):
     """
     Instruct the storage service to scan a single AIP.
 
@@ -80,6 +82,8 @@ def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None)
 
     :param str aip: AIP UUID string.
     :param str ss_url: The base URL to a storage service installation.
+    :param str ss_user: Storage service user to authenticate as
+    :param str ss_key: API key of the storage service user
     :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be     transmitted.
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param session_id: Identifier for this session, allowing every scan from one run to be identified.
@@ -89,7 +93,7 @@ def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None)
     # get_single_aip() will raise an exception if the storage service
     # does not have an AIP with that UUID, or otherwise errors out
     # while attempting to respond to the request.
-    storage_service.get_single_aip(aip, ss_url)
+    storage_service.get_single_aip(aip, ss_url, ss_user, ss_key)
 
     start_time = datetime.utcnow()
 
@@ -108,7 +112,7 @@ def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None)
 
     try:
         status, report = storage_service.scan_aip(
-            aip, ss_url, session,
+            aip, ss_url, ss_user, ss_key, session,
             start_time=start_time
         )
         report_data = json.loads(report.report)
@@ -143,11 +147,13 @@ def scan(aip, ss_url, session, report_url=None, report_auth=(), session_id=None)
     return status
 
 
-def scanall(ss_url, session, report_url=None, report_auth=(), throttle_time=0):
+def scanall(ss_url, ss_user, ss_key, session, report_url=None, report_auth=(), throttle_time=0):
     """
     Run a fixity scan on every AIP in a storage service instance.
 
     :param str ss_url: The base URL to a storage service installation.
+    :param str ss_user: Storage service user to authenticate as
+    :param str ss_key: API key of the storage service user
     :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be transmitted.
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param int throttle_time: Time to wait between scans.
@@ -159,14 +165,14 @@ def scanall(ss_url, session, report_url=None, report_auth=(), throttle_time=0):
     session_id = str(uuid4())
 
     try:
-        aips = storage_service.get_all_aips(ss_url)
+        aips = storage_service.get_all_aips(ss_url, ss_user, ss_key)
     except storage_service.StorageServiceError as e:
         return e
     count = len(aips)
     for aip in aips:
         try:
             scan_success = scan(
-                aip['uuid'], ss_url, session,
+                aip['uuid'], ss_url, ss_user, ss_key, session,
                 report_url=report_url, report_auth=report_auth,
                 session_id=session_id
             )
@@ -211,14 +217,14 @@ def main():
 
         if args.command == 'scanall':
             status = scanall(
-                args.ss_url, session,
+                args.ss_url, args.ss_user, args.ss_key, session,
                 report_url=report_url, report_auth=auth,
                 throttle_time=args.throttle
             )
         elif args.command == 'scan':
             session_id = str(uuid4())
             status = scan(
-                args.aip, args.ss_url, session,
+                args.aip, args.ss_url, args.ss_user, args.ss_key, session,
                 report_url=report_url, report_auth=auth,
                 session_id=session_id
             )

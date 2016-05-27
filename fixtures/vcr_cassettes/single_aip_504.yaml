@@ -6,7 +6,7 @@ interactions:
       Accept-Encoding: ['gzip, deflate, compress']
       User-Agent: [python-requests/2.2.1 CPython/2.7.7 Darwin/13.2.0]
     method: GET
-    uri: http://localhost:8000/api/v2/file/a7f2a05b-0fdf-42f1-a46c-4522a831cf17/
+    uri: http://localhost:8000/api/v2/file/a7f2a05b-0fdf-42f1-a46c-4522a831cf17/?username=test&api_key=dfe83300db5f05f63157f772820bb028bd4d0e27
   response:
     body: {string: !!python/unicode "<html>\r\n<head><title>504 Gateway Time-out</title></head>\r\n<body
         bgcolor=\"white\">\r\n<center><h1>504 Gateway Time-out</h1></center>\r\n<hr><center>nginx/1.1.19</center>\r\n</body>\r\n</html>\r\n"}

@@ -6,7 +6,7 @@ interactions:
       Accept-Encoding: ['gzip, deflate, compress']
       User-Agent: [python-requests/2.2.1 CPython/2.7.3 Linux/3.2.0-61-generic]
     method: GET
-    uri: http://localhost:8000/api/v2/file/a7f2a05b-0fdf-42f1-a46c-4522a831cf17/
+    uri: http://localhost:8000/api/v2/file/a7f2a05b-0fdf-42f1-a46c-4522a831cf17/?username=test&api_key=dfe83300db5f05f63157f772820bb028bd4d0e27
   response:
     body: {string: !!python/unicode '{"current_full_path": "/var/archivematica/sharedDirectory/www/AIPsStore/a7f2/a05b/0fdf/42f1/a46c/4522/a831/cf17/Unicode-a7f2a05b-0fdf-42f1-a46c-4522a831cf17.7z",
         "current_location": "/api/v2/location/0b82f734-763a-453c-979d-0a14cf0a250c/",

@@ -39,6 +39,14 @@ The following environment variables **must** be exported in the environment for 
     The base URL to the storage service instance to scan. Must include the port number for non port 80 installations. Example:
       http://localhost:8000/
 
+  * **STORAGE_SERVICE_USER**:
+    Username for API authentication with the storage service. Example:
+      test
+
+  * **STORAGE_SERVICE_KEY**:
+    API key for API authentication with the storage service. Example:
+      dfe83300db5f05f63157f772820bb028bd4d0e27
+
   * **REPORT_URL**:
     The base URL to the remote service to which scan reports will be POSTed.
 

@@ -6,7 +6,7 @@ interactions:
       Accept-Encoding: ['gzip, deflate, compress']
       User-Agent: [python-requests/2.2.1 CPython/2.7.8 Darwin/13.2.0]
     method: GET
-    uri: http://localhost:8000/api/v2/file/
+    uri: http://localhost:8000/api/v2/file/?username=test&api_key=dfe83300db5f05f63157f772820bb028bd4d0e27
   response:
     body: {string: !!python/unicode '{"meta": {"limit": 20, "next": null, "offset":
         0, "previous": null, "total_count": 0}, "objects": []}'}

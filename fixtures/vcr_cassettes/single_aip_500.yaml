@@ -6,7 +6,7 @@ interactions:
       Accept-Encoding: ['gzip, deflate, compress']
       User-Agent: [python-requests/2.2.1 CPython/2.7.3 Linux/3.2.0-61-generic]
     method: GET
-    uri: http://localhost:8000/api/v2/file/a7f2a05b-0fdf-42f1-a46c-4522a831cf17/
+    uri: http://localhost:8000/api/v2/file/a7f2a05b-0fdf-42f1-a46c-4522a831cf17/?username=test&api_key=dfe83300db5f05f63157f772820bb028bd4d0e27
   response:
     body: {string: !!python/unicode '{"error_message": "no such column: locations_package.misc_attributes",
         "traceback": "Traceback (most recent call last):\n\n  File \"/home/mistydemeo/Envs/storage-service/local/lib/python2.7/site-packages/tastypie/resources.py\",

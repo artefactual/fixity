@@ -32,6 +32,8 @@ Installation
   ```
   #!/bin/bash
   export STORAGE_SERVICE_URL=http://localhost:8000
+  export STORAGE_SERVICE_USER=myuser
+  export STORAGE_SERVICE_KEY=myapikey
   ...
   ```
 

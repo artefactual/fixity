@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="fixity",
-    version="0.2",
+    version="0.3",
     packages=["fixity"],
     url = 'https://github.com/artefactual/fixity',
     author = 'Artefactual Systems',

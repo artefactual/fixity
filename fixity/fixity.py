@@ -213,7 +213,7 @@ def main():
         auth = ()
 
     try:
-        report_url = 'report_url' in args or None
+        report_url = args.report_url if ('report_url' in args) else None
 
         if args.command == 'scanall':
             status = scanall(

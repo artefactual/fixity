@@ -7,6 +7,7 @@ setup(
     url = 'https://github.com/artefactual/fixity',
     author = 'Artefactual Systems',
     author_email = 'info@artefactual.com',
+    download_url = 'https://github.com/artefactual/fixity/archive/v0.3.0.tar.gz',
     entry_points={"console_scripts": ["fixity = fixity.fixity:main"]},
     classifiers = [
         'License :: OSI Approved :: GNU Affero General Public License v3',

@@ -26,11 +26,15 @@ class StorageServiceError(Exception):
         super(StorageServiceError, self).__init__(message)
 
 
-def _get_aips(ss_url, ss_user, ss_key, uri='api/v2/file/'):
-    url = ss_url + uri
-    params = {'username': ss_user, 'api_key': ss_key}
+def _get_aips(ss_url, ss_user, ss_key, uri=None):
     try:
-        response = requests.get(url, params=params)
+        if uri:
+            url = ss_url + uri
+            response = requests.get(url)
+        else:
+            url = ss_url + 'api/v2/file/'
+            params = {'username': ss_user, 'api_key': ss_key}
+            response = requests.get(url, params=params)
     except requests.ConnectionError:
         raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
 

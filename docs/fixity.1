@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "FIXITY" "1" "May 2016" "" ""
+.TH "FIXITY" "1" "November 2018" "" ""
 .
 .SH "NAME"
 \fBfixity\fR \- Check fixity for AIPs
@@ -10,7 +10,10 @@
 \fBfixity\fR command [options] [UUID]
 .
 .SH "DESCRIPTION"
-fixity is a tool to check fixity of Archival Information Packages (AIPs) stored using the Archivematica Storage Service\.
+fixity is a command line tool that assists in checking fixity for AIPs stored in the Archivematica Storage Service\.
+.
+.P
+fixity is a client application that calls the Storage Service Check Fixity API endpoint for a single AIP or across the entire Storage Service\. The Storage Service performs the fixity check itself and the results are reported on by the fixity client application\.
 .
 .P
 fixity can be configured to POST its reports to a remote service after completing every scan\. It also retains an internal database which keeps track of every AIP it\'s scanned and a report of every scan\.
@@ -22,11 +25,11 @@ fixity requires several environment variables to be exported when it is running;
 .
 .TP
 \fB\-\-throttle\fR \fIseconds\fR
-Time (in seconds) to wait when scanning multiple AIPs\. This can help reduce extended disk load on the filesystem on which the AIPs reside\.
+Time (in seconds) to wait when scanning multiple AIPs\. This can help reduce extended disk load on the Storage Service filesystem on which the AIPs reside\.
 .
 .TP
 \fB\-\-force\-local\fR
-Request the Storage Service performs a local fixity check, instead of using the Space\'s fixity (if available)\.
+Request the Storage Service performs a local fixity check, instead of using the Space\'s fixity (this is only available for Arkivum Spaces)\.
 .
 .TP
 \fB\-\-debug\fR

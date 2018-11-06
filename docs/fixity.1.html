@@ -78,17 +78,29 @@
 
 <h2 id="DESCRIPTION">DESCRIPTION</h2>
 
-<p>fixity is a tool to check fixity of Archival Information Packages (AIPs) stored using the Archivematica Storage Service.</p>
+<p>fixity is a command line tool that assists in checking fixity for AIPs stored
+in the Archivematica Storage Service.</p>
 
-<p>fixity can be configured to POST its reports to a remote service after completing every scan. It also retains an internal database which keeps track of every AIP it's scanned and a report of every scan.</p>
+<p>fixity is a client application that calls the Storage Service Check Fixity API
+endpoint for a single AIP or across the entire Storage Service. The Storage
+Service performs the fixity check itself and the results are reported on by the
+fixity client application.</p>
 
-<p>fixity requires several environment variables to be exported when it is running; see the section on <em>ENVIRONMENT VARIABLES</em> for information.</p>
+<p>fixity can be configured to POST its reports to a remote service after
+completing every scan. It also retains an internal database which keeps track
+of every AIP it's scanned and a report of every scan.</p>
+
+<p>fixity requires several environment variables to be exported when it is
+running; see the section on <em>ENVIRONMENT VARIABLES</em> for information.</p>
 
 <h2 id="OPTIONS">OPTIONS</h2>
 
 <dl>
-<dt><code>--throttle</code> <var>seconds</var></dt><dd><p>Time (in seconds) to wait when scanning multiple AIPs. This can help reduce extended disk load on the filesystem on which the AIPs reside.</p></dd>
-<dt><code>--force-local</code></dt><dd><p>Request the Storage Service performs a local fixity check, instead of using the Space's fixity (if available).</p></dd>
+<dt><code>--throttle</code> <var>seconds</var></dt><dd><p>Time (in seconds) to wait when scanning multiple AIPs. This can help reduce
+extended disk load on the Storage Service filesystem on which the AIPs
+reside.</p></dd>
+<dt><code>--force-local</code></dt><dd><p>Request the Storage Service performs a local fixity check, instead of using
+the Space's fixity (this is only available for Arkivum Spaces).</p></dd>
 <dt class="flush"><code>--debug</code></dt><dd><p>Print extra debugging output.</p></dd>
 </dl>
 
@@ -96,26 +108,37 @@
 <h2 id="COMMANDS">COMMANDS</h2>
 
 <dl>
-<dt><code>scan</code> <var>UUID</var></dt><dd><p>Run a fixity scan on a single AIP, using the specified UUID. If the UUID is malformed, or the Storage Service does not have an AIP with the specified UUID, this will produce an error and exit 1. After the scan completes, a brief report will be printed with information on whether the scan succeeded or failed.</p></dd>
-<dt class="flush"><code>scanall</code></dt><dd><p>Run a fixity scan on every AIP registered with the target Storage Service instance. This command does not take any arguments. A brief report will be printed after every AIP is scanned.</p>
+<dt><code>scan</code> <var>UUID</var></dt><dd><p>Run a fixity scan on a single AIP, using the specified UUID. If the UUID is
+malformed, or the Storage Service does not have an AIP with the specified
+UUID, this will produce an error and exit 1. After the scan completes, a
+brief report will be printed with information on whether the scan succeeded
+or failed.</p></dd>
+<dt class="flush"><code>scanall</code></dt><dd><p>Run a fixity scan on every AIP registered with the target Storage Service
+instance. This command does not take any arguments. A brief report will be
+printed after every AIP is scanned.</p>
 
-<p>If <code>--throttle</code> is passed, then the tool will pause for the specified number of seconds between scans.</p></dd>
+<p>If <code>--throttle</code> is passed, then the tool will pause for the specified
+number of seconds between scans.</p></dd>
 </dl>
 
 
 <h2 id="ENVIRONMENT-VARIABLES">ENVIRONMENT VARIABLES</h2>
 
-<p>The following environment variables <strong>must</strong> be exported in the environment for fixity to operate.</p>
+<p>The following environment variables <strong>must</strong> be exported in the environment for
+fixity to operate.</p>
 
 <dl>
-<dt><strong>STORAGE_SERVICE_URL</strong></dt><dd><p>The base URL to the storage service instance to scan. Must include the port number for non port 80 installations. Example:
+<dt><strong>STORAGE_SERVICE_URL</strong></dt><dd><p>The base URL to the storage service instance to scan. Must include the port
+number for non port 80 installations. Example:
   http://localhost:8000/</p></dd>
 <dt><strong>STORAGE_SERVICE_USER</strong></dt><dd><p>Username for API authentication with the storage service. Example:
   test</p></dd>
 <dt><strong>STORAGE_SERVICE_KEY</strong></dt><dd><p>API key for API authentication with the storage service. Example:
   dfe83300db5f05f63157f772820bb028bd4d0e27</p></dd>
 <dt><strong>REPORT_URL</strong></dt><dd><p>The base URL to the remote service to which scan reports will be POSTed.</p></dd>
-<dt><strong>REPORT_USERNAME</strong></dt><dd><p>Username for API authentication with the reporting service. Not all reporting services require API authentication; leave this unset if API access is unauthenticated.</p></dd>
+<dt><strong>REPORT_USERNAME</strong></dt><dd><p>Username for API authentication with the reporting service. Not all
+reporting services require API authentication; leave this unset if API
+access is unauthenticated.</p></dd>
 <dt><strong>REPORT_PASSWORD</strong></dt><dd><p>Password for API authentication with the reporting service; see above.</p></dd>
 </dl>
 
@@ -123,7 +146,7 @@
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'></li>
-    <li class='tc'>May 2016</li>
+    <li class='tc'>November 2018</li>
     <li class='tr'>fixity(1)</li>
   </ol>
 

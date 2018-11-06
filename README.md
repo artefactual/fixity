@@ -341,4 +341,4 @@ For more information on usage, consult the [manpage](docs/fixity.1.md).
 Copyright
 ---------
 
-Fixity is copyright 2014,2015,2016 Artefactual Systems Inc.
+Fixity is copyright 2014-2018 Artefactual Systems Inc.

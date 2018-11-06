@@ -156,6 +156,9 @@ def scan(aip, ss_url, ss_user, ss_key, session, report_url=None, report_auth=(),
             print("Unable to POST report for AIP {} to remote service".format(aip),
                   file=sys.stderr)
 
+    if report:
+        session.add(report)
+
     return status
 
 

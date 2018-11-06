@@ -7,8 +7,13 @@ fixity(1) -- Check fixity for AIPs
 
 ## DESCRIPTION
 
-fixity is a tool to check fixity of Archival Information Packages (AIPs) stored
-using the Archivematica Storage Service.
+fixity is a command line tool that assists in checking fixity for AIPs stored
+in the Archivematica Storage Service.
+
+fixity is a client application that calls the Storage Service Check Fixity API
+endpoint for a single AIP or across the entire Storage Service. The Storage
+Service performs the fixity check itself and the results are reported on by the
+fixity client application.
 
 fixity can be configured to POST its reports to a remote service after
 completing every scan. It also retains an internal database which keeps track
@@ -21,11 +26,12 @@ running; see the section on _ENVIRONMENT VARIABLES_ for information.
 
   * `--throttle` <seconds>:
     Time (in seconds) to wait when scanning multiple AIPs. This can help reduce
-    extended disk load on the filesystem on which the AIPs reside.
+    extended disk load on the Storage Service filesystem on which the AIPs
+    reside.
 
   * `--force-local`:
     Request the Storage Service performs a local fixity check, instead of using
-    the Space's fixity (if available).
+    the Space's fixity (this is only available for Arkivum Spaces).
 
   * `--debug`:
     Print extra debugging output.

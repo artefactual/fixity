@@ -2,7 +2,7 @@ fixity
 ======
 
 Fixity is a command line tool that assists in checking fixity for AIPs stored
-in Archivematica Storage Service instances.
+in the Archivematica Storage Service.
 
 Fixity is a client that calls the Storage Service's API (Application
 Programming Interface) endpoint

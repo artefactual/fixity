@@ -18,21 +18,28 @@ class ArgumentError(Exception):
 
 
 def validate_arguments(args):
-    if args.command == 'scan' and not args.aip:
-        raise ArgumentError('An AIP UUID must be specified when scanning a single AIP')
+    if args.command == "scan" and not args.aip:
+        raise ArgumentError("An AIP UUID must be specified when scanning a single AIP")
 
 
 def parse_arguments():
     parser = ArgumentParser()
-    parser.add_argument('command', choices=['scan', 'scanall'],
-        help='Command to run.')
-    parser.add_argument('aip', nargs='?', help="If 'scan', UUID of the AIP to scan")
-    parser.add_argument('-d', '--debug', action='store_true',
-        help='Print extra debugging output.')
-    parser.add_argument('--throttle', type=int, default=0,
-        help='Time in seconds to wait between scanning multiple AIPs.')
-    parser.add_argument('--force-local', action='store_true',
-        help="Force a local fixity check on the Storage Service.")
+    parser.add_argument("command", choices=["scan", "scanall"], help="Command to run.")
+    parser.add_argument("aip", nargs="?", help="If 'scan', UUID of the AIP to scan")
+    parser.add_argument(
+        "-d", "--debug", action="store_true", help="Print extra debugging output."
+    )
+    parser.add_argument(
+        "--throttle",
+        type=int,
+        default=0,
+        help="Time in seconds to wait between scanning multiple AIPs.",
+    )
+    parser.add_argument(
+        "--force-local",
+        action="store_true",
+        help="Force a local fixity check on the Storage Service.",
+    )
     args = parser.parse_args()
 
     validate_arguments(args)
@@ -47,42 +54,52 @@ def _get_environment_variable(var):
 
 
 def fetch_environment_variables(namespace):
-    namespace.ss_url = _get_environment_variable('STORAGE_SERVICE_URL')
-    if not namespace.ss_url.endswith('/'):
-        namespace.ss_url = namespace.ss_url + '/'
-    namespace.ss_user = _get_environment_variable('STORAGE_SERVICE_USER')
-    namespace.ss_key = _get_environment_variable('STORAGE_SERVICE_KEY')
+    namespace.ss_url = _get_environment_variable("STORAGE_SERVICE_URL")
+    if not namespace.ss_url.endswith("/"):
+        namespace.ss_url = namespace.ss_url + "/"
+    namespace.ss_user = _get_environment_variable("STORAGE_SERVICE_USER")
+    namespace.ss_key = _get_environment_variable("STORAGE_SERVICE_KEY")
 
-    if 'REPORT_URL' in os.environ:
-        namespace.report_url = _get_environment_variable('REPORT_URL')
-        if not namespace.report_url.endswith('/'):
-            namespace.report_url = namespace.report_url + '/'
+    if "REPORT_URL" in os.environ:
+        namespace.report_url = _get_environment_variable("REPORT_URL")
+        if not namespace.report_url.endswith("/"):
+            namespace.report_url = namespace.report_url + "/"
 
     # These two parameters are optional; not all reporting services
     # require any authentication.
     try:
-        namespace.report_user = os.environ['REPORT_USERNAME']
-        namespace.report_pass = os.environ['REPORT_PASSWORD']
+        namespace.report_user = os.environ["REPORT_USERNAME"]
+        namespace.report_pass = os.environ["REPORT_PASSWORD"]
     except KeyError:
         namespace.report_user = namespace.report_pass = None
 
 
 def scan_message(aip_uuid, status, message):
     if status is True:
-        succeeded = 'succeeded'
+        succeeded = "succeeded"
     elif status is False:
-        succeeded = 'failed'
+        succeeded = "failed"
     elif status is None:
         succeeded = "didn't run"
     else:
-        succeeded = 'returned an unknown status'
+        succeeded = "returned an unknown status"
     output = "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
     if message:
-        output += ' ({})'.format(message)
+        output += " ({})".format(message)
     return output
 
 
-def scan(aip, ss_url, ss_user, ss_key, session, report_url=None, report_auth=(), session_id=None, force_local=False):
+def scan(
+    aip,
+    ss_url,
+    ss_user,
+    ss_key,
+    session,
+    report_url=None,
+    report_auth=(),
+    session_id=None,
+    force_local=False,
+):
     """
     Instruct the storage service to scan a single AIP.
 
@@ -111,50 +128,65 @@ def scan(aip, ss_url, ss_user, ss_key, session, report_url=None, report_auth=(),
     try:
         if report_url:
             reporting.post_pre_scan_report(
-                aip, start_time,
-                report_url=report_url, report_auth=report_auth,
-                session_id=session_id
+                aip,
+                start_time,
+                report_url=report_url,
+                report_auth=report_auth,
+                session_id=session_id,
             )
     except reporting.ReportServiceException:
         print(
-            "Unable to POST pre-scan report to {}".format(report_url),
-            file=sys.stderr
+            "Unable to POST pre-scan report to {}".format(report_url), file=sys.stderr
         )
 
     try:
         status, report = storage_service.scan_aip(
-            aip, ss_url, ss_user, ss_key, session,
+            aip,
+            ss_url,
+            ss_user,
+            ss_key,
+            session,
             start_time=start_time,
             force_local=force_local,
         )
         report_data = json.loads(report.report)
-        print(scan_message(aip, status, report_data['message']), file=sys.stderr)
+        print(scan_message(aip, status, report_data["message"]), file=sys.stderr)
     except Exception as e:
         print(e.message, file=sys.stderr)
         status = None
-        if hasattr(e, 'report') and e.report:
+        if hasattr(e, "report") and e.report:
             report = e.report
         # Certain classes of exceptions will not return reports because no
         # scan was even attempted; report the exception in that case.
         else:
             report_dict = {
                 "success": "None",
-                "message": "Exception encountered while scanning AIP {}: {} ({})".format(aip, type(e).__name__, e.message),
+                "message": "Exception encountered while scanning AIP {}: {} ({})".format(
+                    aip, type(e).__name__, e.message
+                ),
                 "traceback": traceback.format_exc(),
-                "errors": None
+                "errors": None,
             }
 
             report = Report(
-                aip_id=aip, report=json.dumps(report_dict), success=None,
-                begun=start_time, ended=start_time, posted=False
+                aip_id=aip,
+                report=json.dumps(report_dict),
+                success=None,
+                begun=start_time,
+                ended=start_time,
+                posted=False,
             )
 
     if report_url:
         try:
-            reporting.post_success_report(aip, report, report_url, report_auth=report_auth, session_id=session_id)
+            reporting.post_success_report(
+                aip, report, report_url, report_auth=report_auth, session_id=session_id
+            )
         except reporting.ReportServiceException:
-            print("Unable to POST report for AIP {} to remote service".format(aip),
-                  file=sys.stderr)
+            print(
+                "Unable to POST report for AIP {} to remote service".format(aip),
+                file=sys.stderr,
+            )
 
     if report:
         session.add(report)
@@ -162,7 +194,16 @@ def scan(aip, ss_url, ss_user, ss_key, session, report_url=None, report_auth=(),
     return status
 
 
-def scanall(ss_url, ss_user, ss_key, session, report_url=None, report_auth=(), throttle_time=0, force_local=False):
+def scanall(
+    ss_url,
+    ss_user,
+    ss_key,
+    session,
+    report_url=None,
+    report_auth=(),
+    throttle_time=0,
+    force_local=False,
+):
     """
     Run a fixity scan on every AIP in a storage service instance.
 
@@ -188,14 +229,24 @@ def scanall(ss_url, ss_user, ss_key, session, report_url=None, report_auth=(), t
     for aip in aips:
         try:
             scan_success = scan(
-                aip['uuid'], ss_url, ss_user, ss_key, session,
-                report_url=report_url, report_auth=report_auth,
-                session_id=session_id, force_local=force_local,
+                aip["uuid"],
+                ss_url,
+                ss_user,
+                ss_key,
+                session,
+                report_url=report_url,
+                report_auth=report_auth,
+                session_id=session_id,
+                force_local=force_local,
             )
             if not scan_success:
                 success = False
         except Exception as e:
-            print("Internal error encountered while scanning AIP {} ({})".format(aip['uuid'], type(e).__name__))
+            print(
+                "Internal error encountered while scanning AIP {} ({})".format(
+                    aip["uuid"], type(e).__name__
+                )
+            )
 
         if throttle_time:
             sleep(throttle_time)
@@ -229,20 +280,31 @@ def main():
         auth = ()
 
     try:
-        report_url = args.report_url if ('report_url' in args) else None
+        report_url = args.report_url if ("report_url" in args) else None
 
-        if args.command == 'scanall':
+        if args.command == "scanall":
             status = scanall(
-                args.ss_url, args.ss_user, args.ss_key, session,
-                report_url=report_url, report_auth=auth,
-                throttle_time=args.throttle, force_local=args.force_local
+                args.ss_url,
+                args.ss_user,
+                args.ss_key,
+                session,
+                report_url=report_url,
+                report_auth=auth,
+                throttle_time=args.throttle,
+                force_local=args.force_local,
             )
-        elif args.command == 'scan':
+        elif args.command == "scan":
             session_id = str(uuid4())
             status = scan(
-                args.aip, args.ss_url, args.ss_user, args.ss_key, session,
-                report_url=report_url, report_auth=auth,
-                session_id=session_id, force_local=args.force_local,
+                args.aip,
+                args.ss_url,
+                args.ss_user,
+                args.ss_key,
+                session,
+                report_url=report_url,
+                report_auth=auth,
+                session_id=session_id,
+                force_local=args.force_local,
             )
         else:
             return Exception('Error: "{}" is not a valid command.'.format(args.command))
@@ -266,5 +328,5 @@ def main():
     return success
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -7,6 +7,7 @@ except NameError:
     # Python3
     STRING_TYPES = str
 
+
 class InvalidUUID(Exception):
     def __init__(self, uuid):
         self.message = "Invalid UUID: {}".format(uuid)

@@ -1,4 +1,4 @@
 -r base.txt
 ipython==2.0.0
-pytest==5.1.1
+pytest==4.6.5
 vcrpy==1.0.0

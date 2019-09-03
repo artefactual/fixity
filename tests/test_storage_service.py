@@ -255,7 +255,7 @@ def test_fixity_scan_raises_on_invalid_url():
     error_msgs = (
         "Unable to connect",
         "fixity scan could not be started",
-        "returned 410"
+        "returned 410",
     )
     assert any(msg in str(ex.value) for msg in error_msgs)
 

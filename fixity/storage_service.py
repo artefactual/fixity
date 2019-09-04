@@ -108,7 +108,7 @@ def get_single_aip(uuid, ss_url, ss_user, ss_key):
     try:
         response = requests.get(ss_url + "api/v2/file/" + uuid + "/", params=params)
     except requests.ConnectionError:
-        raise (StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url)))
+        raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
 
     if response.status_code == 500:
         raise StorageServiceError(

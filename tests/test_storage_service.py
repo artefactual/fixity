@@ -85,7 +85,8 @@ def test_single_aip_raises_with_invalid_url():
             STORAGE_SERVICE_KEY,
         )
 
-    assert "Unable to connect" in str(ex.value)
+    error_msgs = ("Unable to connect", "returned 404", "returned 410")
+    assert any(msg in str(ex.value) for msg in error_msgs)
 
 
 @vcr.use_cassette("fixtures/vcr_cassettes/single_aip_bad_auth.yaml")
@@ -157,7 +158,8 @@ def test_get_all_aips_raises_with_invalid_url():
             "http://foo", STORAGE_SERVICE_USER, STORAGE_SERVICE_KEY
         )
 
-    assert "Unable to connect" in str(ex.value)
+    error_msgs = ("Unable to connect", "returned 404", "returned 410")
+    assert any(msg in str(ex.value) for msg in error_msgs)
 
 
 @vcr.use_cassette("fixtures/vcr_cassettes/all_aips_bad_auth.yaml")
@@ -251,7 +253,12 @@ def test_fixity_scan_raises_on_invalid_url():
             SESSION,
         )
 
-    assert "Unable to connect" in str(ex.value)
+    error_msgs = (
+        "Unable to connect",
+        "fixity scan could not be started",
+        "returned 410",
+    )
+    assert any(msg in str(ex.value) for msg in error_msgs)
 
 
 @vcr.use_cassette("fixtures/vcr_cassettes/fixity_bad_auth.yaml")

@@ -1,6 +1,24 @@
 fixity
 ======
 
+* [About](#about)
+* [Check fixity](#check-fixity)
+* [Fixity errors](#fixity-errors)
+  * [Information has been deleted from a file](#information-has-been-deleted-from-a-file)
+  * [A character in a file has been modified](#a-character-in-a-file-has-been-modified)
+  * [A file has been removed from the package](#a-file-has-been-removed-from-the-package)
+  * [A file has been added to the package](#a-file-has-been-added-to-the-package)
+  * [A manifest has been removed from the package](#a-manifest-has-been-removed-from-the-package)
+  * [How this looks in the Storage Service](#how-this-looks-in-the-storage-service)
+* [Installation](#installation)
+* [Usage](#usage)
+* [Security](#security)
+* [Copyright](#copyright)
+
+
+About
+-----
+
 Fixity is a command line tool that assists in checking fixity for AIPs stored
 in the Archivematica Storage Service.
 
@@ -15,7 +33,7 @@ Fixity is a client application that calls the Storage Service's
 [Check Fixity](https://wiki.archivematica.org/Storage_Service_API#Check_fixity)
 API endpoint for a single AIP or for each AIP in the Storage Service.
 
-Check Fixity
+Check fixity
 ------------
 
 The Storage Service's Check Fixity endpoint can be used to trigger a fixity
@@ -90,7 +108,7 @@ And we can see the details of the check in the SQL output:
 +--------------------------------------+----------------------------+---------+---------------+
 ```
 
-Fixity Errors
+Fixity errors
 -------------
 
 The Storage Service can detect multiple categories of error. Some are shown as
@@ -343,6 +361,13 @@ Usage
 -----
 
 For more information on usage, consult the [manpage](docs/fixity.1.md).
+
+Security
+--------
+
+If you have a security concern about Archivematica or any of its companion
+repositories, please see the [SECURITY file in the main Archivematica
+repository](https://github.com/artefactual/archivematica).
 
 Copyright
 ---------

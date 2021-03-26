@@ -1,3 +1,6 @@
+[![GitHub CI](https://github.com/artefactual/fixity/actions/workflows/test.yml/badge.svg)](https://github.com/artefactual/fixity/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/artefactual/fixity/branch/master/graph/badge.svg?token=wiga5iF7CK)](https://codecov.io/gh/artefactual/fixity)
+
 fixity
 ======
 

@@ -1,5 +1,5 @@
 -r base.txt
-ipython==2.0.0
+ipython==7.16.3
 pytest==4.6.5
 pytest-cov==2.11.1
 vcrpy==1.0.0

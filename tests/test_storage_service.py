@@ -126,7 +126,7 @@ def test_get_all_aips_gets_uploaded_aips_only():
     aips = storage_service.get_all_aips(
         STORAGE_SERVICE_URL, STORAGE_SERVICE_USER, STORAGE_SERVICE_KEY
     )
-    non_uploaded = list(filter(lambda a: a["status"] != u"UPLOADED", aips))
+    non_uploaded = list(filter(lambda a: a["status"] != "UPLOADED", aips))
     assert len(non_uploaded) == 0
 
 

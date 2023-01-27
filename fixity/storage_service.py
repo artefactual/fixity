@@ -69,7 +69,7 @@ def _get_aips(ss_url, ss_user, ss_key, uri=None):
     filtered_aips = [
         aip
         for aip in results["objects"]
-        if aip["package_type"] == "AIP" and aip["status"] == u"UPLOADED"
+        if aip["package_type"] == "AIP" and aip["status"] == "UPLOADED"
     ]
     results["objects"] = filtered_aips
     return results

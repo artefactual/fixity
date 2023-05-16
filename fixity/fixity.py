@@ -152,7 +152,7 @@ def scan(
         report_data = json.loads(report.report)
         print(scan_message(aip, status, report_data["message"]), file=sys.stderr)
     except Exception as e:
-        print(e.message, file=sys.stderr)
+        print(str(e), file=sys.stderr)
         status = None
         if hasattr(e, "report") and e.report:
             report = e.report
@@ -162,7 +162,7 @@ def scan(
             report_dict = {
                 "success": "None",
                 "message": "Exception encountered while scanning AIP {}: {} ({})".format(
-                    aip, type(e).__name__, e.message
+                    aip, type(e).__name__, str(e)
                 ),
                 "traceback": traceback.format_exc(),
                 "errors": None,

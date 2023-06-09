@@ -1,11 +1,11 @@
 import json
 
+import pytest
+import vcr
+
 from fixity import storage_service
 from fixity.models import Session
 from fixity.utils import InvalidUUID
-
-import pytest
-import vcr
 
 
 SESSION = Session()

@@ -1,16 +1,16 @@
-from __future__ import print_function
-from argparse import ArgumentParser
-from datetime import datetime
 import json
 import os
 import sys
-from uuid import uuid4
-from time import sleep
 import traceback
+from argparse import ArgumentParser
+from datetime import datetime
+from time import sleep
+from uuid import uuid4
 
-from .models import Report, Session
 from . import reporting
 from . import storage_service
+from .models import Report
+from .models import Session
 
 
 class ArgumentError(Exception):
@@ -50,7 +50,7 @@ def _get_environment_variable(var):
     try:
         return os.environ[var]
     except KeyError as e:
-        raise ArgumentError("Missing environment variable: {}".format(e.args[0]))
+        raise ArgumentError(f"Missing environment variable: {e.args[0]}")
 
 
 def fetch_environment_variables(namespace):
@@ -83,9 +83,9 @@ def scan_message(aip_uuid, status, message):
         succeeded = "didn't run"
     else:
         succeeded = "returned an unknown status"
-    output = "Fixity scan {} for AIP: {}".format(succeeded, aip_uuid)
+    output = f"Fixity scan {succeeded} for AIP: {aip_uuid}"
     if message:
-        output += " ({})".format(message)
+        output += f" ({message})"
     return output
 
 
@@ -135,9 +135,7 @@ def scan(
                 session_id=session_id,
             )
     except reporting.ReportServiceException:
-        print(
-            "Unable to POST pre-scan report to {}".format(report_url), file=sys.stderr
-        )
+        print(f"Unable to POST pre-scan report to {report_url}", file=sys.stderr)
 
     try:
         status, report = storage_service.scan_aip(
@@ -184,7 +182,7 @@ def scan(
             )
         except reporting.ReportServiceException:
             print(
-                "Unable to POST report for AIP {} to remote service".format(aip),
+                f"Unable to POST report for AIP {aip} to remote service",
                 file=sys.stderr,
             )
 
@@ -307,7 +305,7 @@ def main():
                 force_local=args.force_local,
             )
         else:
-            return Exception('Error: "{}" is not a valid command.'.format(args.command))
+            return Exception(f'Error: "{args.command}" is not a valid command.')
 
         session.commit()
     except Exception as e:

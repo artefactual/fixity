@@ -1,12 +1,13 @@
-from fixity.models import AIP, Report
-from fixity import reporting
-from fixity.utils import InvalidUUID
+import os
+from datetime import datetime
 
 import pytest
 import vcr
 
-import os
-from datetime import datetime
+from fixity import reporting
+from fixity.models import AIP
+from fixity.models import Report
+from fixity.utils import InvalidUUID
 
 
 REPORT_URL = "http://localhost:8003/"

@@ -1,9 +1,9 @@
 import calendar
 import json
 
-from .utils import check_valid_uuid
-
 import requests
+
+from .utils import check_valid_uuid
 
 
 class ReportServiceException(Exception):
@@ -36,19 +36,17 @@ def post_pre_scan_report(aip, start_time, report_url, report_auth=(), session_id
     if report_auth:
         kwargs["auth"] = report_auth
 
-    url = report_url + "api/fixity/{}".format(aip)
+    url = report_url + f"api/fixity/{aip}"
 
     try:
         response = requests.post(url, **kwargs)
     except requests.ConnectionError:
         raise ReportServiceException(
-            "Unable to connect to report service at URL {}".format(report_url)
+            f"Unable to connect to report service at URL {report_url}"
         )
 
     if not response.status_code == 201:
-        raise ReportServiceException(
-            "Report service returned {}".format(response.status_code)
-        )
+        raise ReportServiceException(f"Report service returned {response.status_code}")
 
     return True
 
@@ -85,14 +83,14 @@ def post_success_report(aip, report, report_url, report_auth=(), session_id=None
     if report_auth:
         kwargs["auth"] = report_auth
 
-    url = report_url + "api/fixity/{}".format(aip)
+    url = report_url + f"api/fixity/{aip}"
 
     try:
         response = requests.post(url, **kwargs)
     except requests.ConnectionError:
         report.posted = False
         raise ReportServiceException(
-            "Unable to connect to report service at URL {}".format(report_url)
+            f"Unable to connect to report service at URL {report_url}"
         )
 
     if not response.status_code == 201:

@@ -1,2 +1,2 @@
-requests==2.2.1
-SQLAlchemy==0.9.4
+requests==2.27.1
+SQLAlchemy==1.4.48

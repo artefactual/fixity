@@ -10,7 +10,7 @@ except NameError:
 
 class InvalidUUID(Exception):
     def __init__(self, uuid):
-        self.message = "Invalid UUID: {}".format(uuid)
+        self.message = f"Invalid UUID: {uuid}"
 
     def __str__(self):
         return self.message

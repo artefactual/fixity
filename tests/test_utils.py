@@ -1,6 +1,6 @@
-from fixity import utils
-
 import pytest
+
+from fixity import utils
 
 
 def test_uuid_recognizes_valid_uuid():

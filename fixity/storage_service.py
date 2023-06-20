@@ -1,11 +1,12 @@
 import calendar
-from datetime import datetime
 import json
+from datetime import datetime
 
 import requests
 from sqlalchemy.orm.exc import NoResultFound
 
-from .models import AIP, Report
+from .models import AIP
+from .models import Report
 from .utils import check_valid_uuid
 
 
@@ -25,7 +26,7 @@ class StorageServiceError(Exception):
 
     def __init__(self, message, report=None):
         self.report = report
-        super(StorageServiceError, self).__init__(message)
+        super().__init__(message)
 
 
 def _get_aips(ss_url, ss_user, ss_key, uri=None):
@@ -254,7 +255,7 @@ def scan_aip(
     if response.status_code != 200:
         json_report = {
             "success": None,
-            "message": "Storage service returned {}".format(response.status_code),
+            "message": f"Storage service returned {response.status_code}",
             "started": begun_int,
             "finished": ended_int,
         }

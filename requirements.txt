@@ -1,1 +1,2 @@
--r requirements/production.txt
+requests==2.31.0
+SQLAlchemy==1.4.49

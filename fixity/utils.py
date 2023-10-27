@@ -1,12 +1,5 @@
 from uuid import UUID
 
-try:
-    # Python2
-    STRING_TYPES = basestring
-except NameError:
-    # Python3
-    STRING_TYPES = str
-
 
 class InvalidUUID(Exception):
     def __init__(self, uuid):
@@ -25,7 +18,7 @@ def check_valid_uuid(uuid):
     This uses the UUID() class constructor from the uuid module,
     which raises a ValueError if the passed string is not a valid UUID.
     """
-    if not isinstance(uuid, STRING_TYPES):
+    if not isinstance(uuid, str):
         raise TypeError("UUID must be a string")
 
     try:

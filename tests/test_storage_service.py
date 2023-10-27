@@ -23,7 +23,7 @@ def test_get_single_aip():
     aip = storage_service.get_single_aip(
         aip_uuid, STORAGE_SERVICE_URL, STORAGE_SERVICE_USER, STORAGE_SERVICE_KEY
     )
-    assert type(aip) == dict
+    assert isinstance(aip, dict)
     assert aip["uuid"] == aip_uuid
 
 
@@ -117,7 +117,7 @@ def test_get_all_aips():
     )
     assert len(aips) == 2
     for aip in aips:
-        assert type(aip) == dict
+        assert isinstance(aip, dict)
         assert aip["uuid"] in aip_uuids
 
 

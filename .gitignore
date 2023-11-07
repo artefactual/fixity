@@ -2,3 +2,11 @@
 **/fixity.db
 *~
 .coverage
+
+# Tox files
+.tox/
+
+# Build output
+build/
+dist/
+*.egg-info/

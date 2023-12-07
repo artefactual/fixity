@@ -12,13 +12,15 @@ bug reports, answering questions on the [mailing
 list](https://groups.google.com/forum/#!forum/archivematica), or writing code
 which can be incorporated into Archivematica itself.
 
+## Table of contents
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
 
 - [Submitting bugs](#submitting-bugs)
-- [Submitting enhancement ideas](#submitting-enhancements)
+- [Submitting enhancement ideas](#submitting-enhancement-ideas)
 - [Submitting code changes](#submitting-code-changes)
+  - [Permalinks](#permalinks)
   - [Getting started](#getting-started)
   - [When to submit code for review?](#when-to-submit-code-for-review)
   - [Opening the pull request](#opening-the-pull-request)
@@ -37,15 +39,17 @@ which can be incorporated into Archivematica itself.
   - [Commit History](#commit-history)
     - [Commits should be specific and atomic](#commits-should-be-specific-and-atomic)
     - [Every commit should work](#every-commit-should-work)
+  - [Commit messages](#commit-messages)
     - [Commit summaries should be concise](#commit-summaries-should-be-concise)
     - [Commit messages should be as detailed as they need to be (and no more)](#commit-messages-should-be-as-detailed-as-they-need-to-be-and-no-more)
+      - [More information on commit messages](#more-information-on-commit-messages)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Submitting bugs
 
 If you find a security vulnerability, do NOT open an issue. Email
-security@artefactual.com instead.
+<security@artefactual.com> instead.
 
 All issues about Archivematica or related libraries should be filed in the
 [Archivematica Issues repository](https://github.com/archivematica/Issues).
@@ -57,14 +61,14 @@ local problem!
 
 Useful questions to answer if you're having problems include:
 
-* What version of Archivematica and the Storage Service are you using?
-* How was Archivematica installed? Package install, Ansible, etc?
-* Was this a fresh install or an upgrade?
-* What did you do to cause this bug to happen?
-* What did you expect to happen?
-* What did you see instead?
-* Can you reproduce this reliably?
-* If a specific Job is failing, what output did it produce? This is available
+- What version of Archivematica and the Storage Service are you using?
+- How was Archivematica installed? Package install, Ansible, etc?
+- Was this a fresh install or an upgrade?
+- What did you do to cause this bug to happen?
+- What did you expect to happen?
+- What did you see instead?
+- Can you reproduce this reliably?
+- If a specific Job is failing, what output did it produce? This is available
   by clicking on the gear icon.
 
 ## Submitting enhancement ideas
@@ -182,7 +186,7 @@ The Archivematica contributor's agreement is based almost verbatim on the
 [contributor license](http://www.apache.org/licenses/icla.txt).
 
 If you have any questions or concerns about the Contributor's Agreement,
-please email us at agreement@artefactual.com to discuss them.
+please email us at <agreement@artefactual.com> to discuss them.
 
 ### Why do I have to sign a Contributor's Agreement?
 
@@ -209,14 +213,16 @@ be, rather than fighting legal battles over contributions.
 
 Please print out, read, sign, and scan the
 [contributor agreement](https://wiki.archivematica.org/images/2/25/Contributor_agreement.txt)
-and email it to agreement@artefactual.com
+and email it to <agreement@artefactual.com>
 
 Alternatively, you may send an original signed agreement to:
 
-    Artefactual Systems Inc.
-    201 - 301 Sixth Street
-    New Westminster BC  V3L 3A7
-    Canada
+```text
+Artefactual Systems Inc.
+201 - 301 Sixth Street
+New Westminster BC  V3L 3A7
+Canada
+```
 
 ## Contribution standards
 
@@ -227,11 +233,11 @@ community style guidelines. Newly-written code should conform to PEP-8 style.
 PEP8 is a daunting document, but there are very good linters available that you
 can run to check style in your code.
 
-* The [Black](https://github.com/ambv/black) tool formats the code
+- The [Black](https://github.com/ambv/black) tool formats the code
   automatically. The output is deterministic for any given input. Editor
   integration is possible.
 
-* The [flake8](https://pypi.python.org/pypi/flake8) tool checks for style
+- The [flake8](https://pypi.python.org/pypi/flake8) tool checks for style
   problems as well as errors and complexity. It can be used at the command line
   or as a plugin in your preferred text editor/IDE. The Archivematica
   [continuous integration system](https://travis-ci.org/artefactual/archivematica)
@@ -248,10 +254,10 @@ code-review.
 
 A few additional stylistic preferences might not get flagged by linters:
 
-* Don't use variable or parameter names that shadow builtin functions and
+- Don't use variable or parameter names that shadow builtin functions and
   types. For example, don't name a variable "file". (Unfortunately, Python uses
   many useful names for its builtin types and functions.)
-* Sort imports alphabetically within their grouping to reduce duplicate
+- Sort imports alphabetically within their grouping to reduce duplicate
   imports.
 
 #### Exceptions
@@ -272,10 +278,10 @@ however, if possible, it's great if your new code does conform.
 When working in sections of code that don't conform to PEP8, it's okay to relax
 a few PEP8 rules in order to match existing code. In particular:
 
-* When modifying an existing function which uses camelCase variables or
+- When modifying an existing function which uses camelCase variables or
   parameters, it's okay to make your new variables/parameters camelCase to
   match.
-* When adding new functions to a module or class that uses camelCase naming,
+- When adding new functions to a module or class that uses camelCase naming,
   it's okay to make your new function and its parameters camelCase to match.
   Try to use snake_case internally, however.
 
@@ -293,8 +299,8 @@ Generally any function which isn't obvious (any function longer than a line or
 two) should have a docstring. When in doubt: document! Python's
 [PEP 257](https://www.python.org/dev/peps/pep-0257/) document provides a useful
 guideline for docstring style. Generally, prefer using
-[Sphinx-compatible docstrings](http://pythonhosted.org/an_example_pypi_project/sphinx.html#function-definitions). More
-[examples](http://sphinx-doc.org/domains.html#info-field-lists) and
+[Sphinx-compatible docstrings](http://pythonhosted.org/an_example_pypi_project/sphinx.html#function-definitions).
+More [examples](http://sphinx-doc.org/domains.html#info-field-lists) and
 [attributes to use](http://sphinx-doc.org/domains.html#the-python-domain) can
 be found on the Sphinx website.
 
@@ -363,13 +369,19 @@ and b) what the change is. For example:
 
 Clear commit summary:
 
-> Replace 404 messages with a user-friendly one
+```text
+Replace 404 messages with a user-friendly one
+```
 
 Unclear commit summaries:
 
-> Fixed some normalization bugs
+```text
+Fixed some normalization bugs
+```
 
-> Bugfixes
+```text
+Bugfixes
+```
 
 The unclear messages make it hard to tell at a glance what changed, and that
 makes browsing the commit history harder.
@@ -378,7 +390,9 @@ A commit message should use the
 [imperative mood](https://chris.beams.io/posts/git-commit/#imperative) which
 should always be able to complete the following sentence:
 
-    If applied, this commit will <your subject line here>
+```text
+If applied, this commit will <your subject line here>
+```
 
 #### Commit messages should be as detailed as they need to be (and no more)
 
@@ -396,7 +410,8 @@ made. Make their life easier.
 Each line of a commit message should be no more than 72 characters in width.
 The following is an outline of a commit message combined with an ideal commit
 summary:
-```
+
+```text
 Capitalized, short (50 chars or less) summary
 
 More detailed explanatory text, if necessary.  Wrap it to about 80
@@ -408,7 +423,9 @@ two together.
 
 Further content comes after a blank line.
 ```
+
 ##### More information on commit messages
+
 For more information about how to write a good commit message and to
 understand some of the rationale behind our approach, please see this
 article from Chris Beams on

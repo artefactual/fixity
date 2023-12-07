@@ -1,26 +1,31 @@
+# fixity
+
+[![PyPI version](https://img.shields.io/pypi/v/fixity.svg)](https://pypi.python.org/pypi/fixity)
 [![GitHub CI](https://github.com/artefactual/fixity/actions/workflows/test.yml/badge.svg)](https://github.com/artefactual/fixity/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/artefactual/fixity/branch/master/graph/badge.svg?token=wiga5iF7CK)](https://codecov.io/gh/artefactual/fixity)
 
-fixity
-======
+## Table of contents
 
-* [About](#about)
-* [Check fixity](#check-fixity)
-* [Fixity errors](#fixity-errors)
-  * [Information has been deleted from a file](#information-has-been-deleted-from-a-file)
-  * [A character in a file has been modified](#a-character-in-a-file-has-been-modified)
-  * [A file has been removed from the package](#a-file-has-been-removed-from-the-package)
-  * [A file has been added to the package](#a-file-has-been-added-to-the-package)
-  * [A manifest has been removed from the package](#a-manifest-has-been-removed-from-the-package)
-  * [How this looks in the Storage Service](#how-this-looks-in-the-storage-service)
-* [Installation](#installation)
-* [Usage](#usage)
-* [Security](#security)
-* [Copyright](#copyright)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [About](#about)
+- [Check fixity](#check-fixity)
+- [Fixity errors](#fixity-errors)
+  - [Information has been deleted from a file](#information-has-been-deleted-from-a-file)
+  - [A character in a file has been modified](#a-character-in-a-file-has-been-modified)
+  - [A file has been removed from the package](#a-file-has-been-removed-from-the-package)
+  - [A file has been added to the package](#a-file-has-been-added-to-the-package)
+  - [A manifest has been removed from the package](#a-manifest-has-been-removed-from-the-package)
+  - [How this looks in the Storage Service](#how-this-looks-in-the-storage-service)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Security](#security)
+- [Copyright](#copyright)
 
-About
------
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## About
 
 Fixity is a command line tool that assists in checking fixity for AIPs stored
 in the Archivematica Storage Service.
@@ -36,8 +41,7 @@ Fixity is a client application that calls the Storage Service's
 [Check Fixity](https://wiki.archivematica.org/Storage_Service_API#Check_fixity)
 API endpoint for a single AIP or for each AIP in the Storage Service.
 
-Check fixity
-------------
+## Check fixity
 
 The Storage Service's Check Fixity endpoint can be used to trigger a fixity
 check on an individual package. When the Fixity client calls this endpoint, the
@@ -53,7 +57,8 @@ The URL is constructed as follows:
 
 And we can supply authentication information in a HTTP request using a command
 line tool such as [HTTPie](https://httpie.org):
-```bash
+
+```shell
 http -v --pretty=format \
     GET "http://127.0.0.1:62081/api/v2/file/5e21dd0d-190e-4ffb-b752-76d860bea898/check_fixity/" \
     Authorization:"ApiKey test:test"
@@ -61,6 +66,7 @@ http -v --pretty=format \
 
 This results in the following JSON output showing us that the Fixity check was
 a 'success', that is, there were no errors:
+
 ```json
 {
     "failures": {
@@ -80,7 +86,9 @@ This detailed JSON output is recorded in Fixity's internal database. Summary
 information about errors is printed to the console. The output for package
 `5e21dd0d-190e-4ffb-b752-76d860bea898` would simply look as follows:
 
-`Fixity scan succeeded for AIP: 5e21dd0d-190e-4ffb-b752-76d860bea898`
+```console
+Fixity scan succeeded for AIP: 5e21dd0d-190e-4ffb-b752-76d860bea898
+```
 
 The Check Fixity endpoint updates the Storage Service `fixitylog` model with
 details of the last check completed.
@@ -90,6 +98,7 @@ Storage Service Packages panel by going to `{storage-service-url}/packages/`
 
 Administrators of the Storage Service can query the Storage Service database as
 follows:
+
 ```sql
 select
    package_id as "AIP UUID",
@@ -103,6 +112,7 @@ limit 1;
 ```
 
 And we can see the details of the check in the SQL output:
+
 ```sql
 +--------------------------------------+----------------------------+---------+---------------+
 | AIP UUID                             | Fixity Last Checked        | success | error_details |
@@ -111,20 +121,21 @@ And we can see the details of the check in the SQL output:
 +--------------------------------------+----------------------------+---------+---------------+
 ```
 
-Fixity errors
--------------
+## Fixity errors
 
 The Storage Service can detect multiple categories of error. Some are shown as
 outputs of Fixity below with the corresponding detailed information that can
 be accessed from Fixity's database:
 
 ### Information has been deleted from a file
-```
+
+```console
 Fixity scan failed for AIP: 5e21dd0d-190e-4ffb-b752-76d860bea898 (Oxum error.
 Found 10 files and 126404 bytes on disk; expected 10 files and 126405 bytes.)
 ```
 
 **Detail:**
+
 ```json
 {
     "failures": {
@@ -143,11 +154,13 @@ Found 10 files and 126404 bytes on disk; expected 10 files and 126405 bytes.)
 ```
 
 ### A character in a file has been modified
-```
+
+```console
 Fixity scan failed for AIP: 5e21dd0d-190e-4ffb-b752-76d860bea898 (invalid bag)
 ```
 
 **Detail:**
+
 ```json
 {
     "failures": {
@@ -174,12 +187,14 @@ Fixity scan failed for AIP: 5e21dd0d-190e-4ffb-b752-76d860bea898 (invalid bag)
 ```
 
 ### A file has been removed from the package
-```
+
+```console
 Fixity scan failed for AIP: 5e21dd0d-190e-4ffb-b752-76d860bea898 (Oxum error.
 Found 9 files and 126386 bytes on disk; expected 10 files and 126405 bytes.)
 ```
 
 **Detail:**
+
 ```json
 {
     "failures": {
@@ -198,12 +213,14 @@ Found 9 files and 126386 bytes on disk; expected 10 files and 126405 bytes.)
 ```
 
 ### A file has been added to the package
-```
+
+```console
 Fixity scan failed for AIP: 5e21dd0d-190e-4ffb-b752-76d860bea898 (Oxum error.
 Found 11 files and 126405 bytes on disk; expected 10 files and 126405 bytes.)
 ```
 
 **Detail:**
+
 ```json
 {
     "failures": {
@@ -223,12 +240,14 @@ Found 11 files and 126405 bytes on disk; expected 10 files and 126405 bytes.)
 ```
 
 ### A manifest has been removed from the package
-```
+
+```console
 Fixity scan failed for AIP: 5e21dd0d-190e-4ffb-b752-76d860bea898 (Missing
 manifest file)
 ```
 
 **Detail:**
+
 ```json
 {
     "failures": {
@@ -250,6 +269,7 @@ manifest file)
 
 For any error in the Fixity check the Storage Service database maintains a
 summary log, see for example when data in a file has been modified:
+
 ```sql
 +--------------------------------------+----------------------------+---------+---------------+
 | AIP UUID                             | Fixity Last Checked        | success | error_details |
@@ -258,24 +278,26 @@ summary log, see for example when data in a file has been modified:
 +--------------------------------------+----------------------------+---------+---------------+
 ```
 
-Installation
-------------
+## Installation
 
 Installation of Fixity can be completed with the following steps:
 
 1. Checkout or link the code to `/usr/lib/archivematica/fixity`
    1. Go to `/usr/lib/archivematica/`
+
       ```bash
       user@root:~$ cd /usr/lib/archivematica/
       ```
 
    2. Clone the code:
+
       ```bash
       user@root:/usr/lib/archivematica/$ git clone https://github.com/artefactual/fixity.git
       ```
 
       Once this is complete, the directory `/usr/lib/archivematica/fixity`
       should exist. `cd` back to the home directory
+
       ```bash
       user@root:/usr/lib/archivematica/$ cd
       ```
@@ -284,11 +306,13 @@ Installation of Fixity can be completed with the following steps:
    dependencies in it
 
    1. Switch to root
+
       ```bash
       user@root:~$ sudo -i
       ```
 
    2. Run:
+
       ```bash
       root@host:~# virtualenv /usr/share/python/fixity
       root@host:~# source /usr/share/python/fixity/bin/activate
@@ -299,6 +323,7 @@ Installation of Fixity can be completed with the following steps:
 
 3. Create a symlink from the executable to `/usr/local/bin`.  You must still be
    root.
+
    ```bash
    (fixity)root@host:/usr/lib/archivematica/fixity# ln -s /usr/share/python/fixity/bin/fixity /usr/local/bin/fixity
    ```
@@ -307,6 +332,7 @@ Installation of Fixity can be completed with the following steps:
    `/etc/profile.d/fixity.sh` is recommended:
 
    1. To create the file:
+
       ```bash
       (fixity)root@host:/usr/lib/archivematica/fixity# touch /etc/profile.d/fixity.sh
       (fixity)root@host:/usr/lib/archivematica/fixity# nano /etc/profile.d/fixity.sh
@@ -315,6 +341,7 @@ Installation of Fixity can be completed with the following steps:
    2. You are now editing the environment variables file. You should use the
       URL of your Storage Service, and the username and API key of one Storage
       Service user. Replace the URL, user and key with your data.
+
       ```bash
       #!/bin/bash
       export STORAGE_SERVICE_URL=http://localhost:8000
@@ -324,6 +351,7 @@ Installation of Fixity can be completed with the following steps:
 
    3. Optionally, if you are using Fixity with a reporting service, you can
       also add:
+
       ```bash
       export REPORT_URL=http://myurl.com
       export REPORT_USERNAME=myuser
@@ -331,23 +359,27 @@ Installation of Fixity can be completed with the following steps:
       ```
 
    4. Load the variables from the file.
+
       ```bash
       (fixity)root@host:/usr/lib/archivematica/fixity# source /etc/profile.d/fixity.sh
       ```
 
 5. Run the tool with sudo or as root the first time.  Subsequent runs can be
    with any user.
+
    ```bash
    (fixity)root@host:/usr/lib/archivematica/fixity# fixity scanall
    ```
 
 6. To exit the virtualenv:
+
    ```bash
    (fixity)root@host:/usr/lib/archivematica/fixity# deactivate
    root@host:/usr/lib/archivematica/fixity#
    ```
 
    And to exit the root user:
+
    ```bash
    root@host:/usr/lib/archivematica/fixity# exit
    user@host:~$
@@ -355,26 +387,23 @@ Installation of Fixity can be completed with the following steps:
 
 7. After the initial install, to run fixity you only need to load the variables
    you defined earlier and run fixity.
+
    ```bash
    user@host:~$ source /etc/profile.d/fixity.sh
    user@host:~$ fixity scanall
    ```
 
-Usage
------
+## Usage
 
 For more information on usage, consult the [manpage](docs/fixity.1.md).
 
-Security
---------
+## Security
 
 If you have a security concern about Archivematica or any of its companion
 repositories, please see the
 [Archivematica security policy](https://github.com/artefactual/archivematica/security/policy)
 for information on how to safely report a vulnerability.
 
-
-Copyright
----------
+## Copyright
 
 Fixity is copyright 2014-2018 Artefactual Systems Inc.

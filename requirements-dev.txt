@@ -6,30 +6,26 @@
 #
 build==1.0.3
     # via pip-tools
-certifi==2023.7.22
+certifi==2023.11.17
     # via requests
 charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via pip-tools
-coverage[toml]==7.3.2
+coverage[toml]==7.3.3
     # via
     #   fixity (pyproject.toml)
     #   pytest-cov
-exceptiongroup==1.1.3
+exceptiongroup==1.2.0
     # via pytest
-greenlet==3.0.1
+greenlet==3.0.2
     # via sqlalchemy
-idna==3.4
-    # via
-    #   requests
-    #   yarl
-importlib-metadata==6.8.0
+idna==3.6
+    # via requests
+importlib-metadata==7.0.0
     # via build
 iniconfig==2.0.0
     # via pytest
-multidict==6.0.4
-    # via yarl
 packaging==23.2
     # via
     #   build
@@ -46,8 +42,6 @@ pytest==7.4.3
     #   pytest-cov
 pytest-cov==4.1.0
     # via fixity (pyproject.toml)
-pyyaml==6.0.1
-    # via vcrpy
 requests==2.31.0
     # via fixity (pyproject.toml)
 sqlalchemy==2.0.23
@@ -59,25 +53,17 @@ tomli==2.0.1
     #   pip-tools
     #   pyproject-hooks
     #   pytest
-typing-extensions==4.8.0
+typing-extensions==4.9.0
     # via sqlalchemy
-urllib3==1.26.18
-    # via
-    #   requests
-    #   vcrpy
-vcrpy==5.1.0
-    # via fixity (pyproject.toml)
-wheel==0.41.3
+urllib3==2.1.0
+    # via requests
+wheel==0.42.0
     # via pip-tools
-wrapt==1.15.0
-    # via vcrpy
-yarl==1.9.2
-    # via vcrpy
 zipp==3.17.0
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==23.3.1
     # via pip-tools
-setuptools==68.2.2
+setuptools==69.0.2
     # via pip-tools

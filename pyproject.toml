@@ -61,7 +61,6 @@ dev = [
   "pip-tools",
   "pytest-cov",
   "pytest",
-  "vcrpy",
 ]
 
 [tool.setuptools.dynamic]

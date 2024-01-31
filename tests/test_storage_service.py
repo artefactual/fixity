@@ -1,7 +1,8 @@
 import json
+from unittest import mock
 
 import pytest
-import vcr
+import requests
 
 from fixity import storage_service
 from fixity.models import Session
@@ -17,8 +18,21 @@ STORAGE_SERVICE_KEY = "dfe83300db5f05f63157f772820bb028bd4d0e27"
 # Single AIP
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/single_aip.yaml")
-def test_get_single_aip():
+@mock.patch(
+    "requests.get",
+    side_effect=[
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {
+                    "uuid": "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",
+                },
+            },
+            spec=requests.Response,
+        )
+    ],
+)
+def test_get_single_aip(_get):
     aip_uuid = "a7f2a05b-0fdf-42f1-a46c-4522a831cf17"
     aip = storage_service.get_single_aip(
         aip_uuid, STORAGE_SERVICE_URL, STORAGE_SERVICE_USER, STORAGE_SERVICE_KEY
@@ -27,8 +41,10 @@ def test_get_single_aip():
     assert aip["uuid"] == aip_uuid
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/single_aip_404.yaml")
-def test_single_aip_raises_on_404():
+@mock.patch(
+    "requests.get", side_effect=[mock.Mock(status_code=404, spec=requests.Response)]
+)
+def test_single_aip_raises_on_404(_get):
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_single_aip(
             "ba31d9b8-5baa-4d62-839e-cf71497d4acf",
@@ -41,8 +57,10 @@ def test_single_aip_raises_on_404():
     assert ex.value.report is None
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/single_aip_500.yaml")
-def test_single_aip_raises_on_500():
+@mock.patch(
+    "requests.get", side_effect=[mock.Mock(status_code=500, spec=requests.Response)]
+)
+def test_single_aip_raises_on_500(_get):
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_single_aip(
             "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",
@@ -55,8 +73,10 @@ def test_single_aip_raises_on_500():
     assert ex.value.report is None
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/single_aip_504.yaml")
-def test_single_aip_raises_on_504():
+@mock.patch(
+    "requests.get", side_effect=[mock.Mock(status_code=504, spec=requests.Response)]
+)
+def test_single_aip_raises_on_504(_get):
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_single_aip(
             "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",
@@ -89,8 +109,10 @@ def test_single_aip_raises_with_invalid_url():
     assert any(msg in str(ex.value) for msg in error_msgs)
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/single_aip_bad_auth.yaml")
-def test_single_aip_raises_with_invalid_auth():
+@mock.patch(
+    "requests.get", side_effect=[mock.Mock(status_code=401, spec=requests.Response)]
+)
+def test_single_aip_raises_with_invalid_auth(_get):
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_single_aip(
             "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",
@@ -105,8 +127,33 @@ def test_single_aip_raises_with_invalid_auth():
 # All AIPs
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/all_aips.yaml")
-def test_get_all_aips():
+@mock.patch(
+    "requests.get",
+    side_effect=[
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {
+                    "meta": {"next": None},
+                    "objects": [
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",
+                        },
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": "c8ebb75e-6b7a-46dd-a360-91d3753d7b72",
+                        },
+                    ],
+                },
+            },
+            spec=requests.Response,
+        )
+    ],
+)
+def test_get_all_aips(_get):
     aip_uuids = (
         "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",
         "c8ebb75e-6b7a-46dd-a360-91d3753d7b72",
@@ -121,8 +168,19 @@ def test_get_all_aips():
         assert aip["uuid"] in aip_uuids
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/all_aips_uploaded_only.yaml")
-def test_get_all_aips_gets_uploaded_aips_only():
+@mock.patch(
+    "requests.get",
+    side_effect=[
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {"meta": {"next": None}, "objects": []},
+            },
+            spec=requests.Response,
+        )
+    ],
+)
+def test_get_all_aips_gets_uploaded_aips_only(_get):
     aips = storage_service.get_all_aips(
         STORAGE_SERVICE_URL, STORAGE_SERVICE_USER, STORAGE_SERVICE_KEY
     )
@@ -130,8 +188,10 @@ def test_get_all_aips_gets_uploaded_aips_only():
     assert len(non_uploaded) == 0
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/all_aips_500.yaml")
-def test_get_all_aips_raises_on_500():
+@mock.patch(
+    "requests.get", side_effect=[mock.Mock(status_code=500, spec=requests.Response)]
+)
+def test_get_all_aips_raises_on_500(_get):
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_all_aips(
             STORAGE_SERVICE_URL, STORAGE_SERVICE_USER, STORAGE_SERVICE_KEY
@@ -141,8 +201,10 @@ def test_get_all_aips_raises_on_500():
     assert ex.value.report is None
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/all_aips_504.yaml")
-def test_get_all_aips_raises_on_504():
+@mock.patch(
+    "requests.get", side_effect=[mock.Mock(status_code=504, spec=requests.Response)]
+)
+def test_get_all_aips_raises_on_504(_get):
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_all_aips(
             STORAGE_SERVICE_URL, STORAGE_SERVICE_USER, STORAGE_SERVICE_KEY
@@ -162,8 +224,10 @@ def test_get_all_aips_raises_with_invalid_url():
     assert any(msg in str(ex.value) for msg in error_msgs)
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/all_aips_bad_auth.yaml")
-def test_get_all_aips_raises_with_bad_auth():
+@mock.patch(
+    "requests.get", side_effect=[mock.Mock(status_code=401, spec=requests.Response)]
+)
+def test_get_all_aips_raises_with_bad_auth(_get):
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.get_all_aips(
             STORAGE_SERVICE_URL, STORAGE_SERVICE_USER, "bad_key"
@@ -175,8 +239,25 @@ def test_get_all_aips_raises_with_bad_auth():
 # Fixity scan
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/fixity_success.yaml")
-def test_successful_fixity_scan():
+@mock.patch(
+    "requests.get",
+    side_effect=[
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {
+                    "failures": {
+                        "files": {"untracked": [], "changed": [], "missing": []}
+                    },
+                    "message": "",
+                    "success": True,
+                },
+            },
+            spec=requests.Response,
+        )
+    ],
+)
+def test_successful_fixity_scan(_get):
     success, report = storage_service.scan_aip(
         "c8ebb75e-6b7a-46dd-a360-91d3753d7b72",
         STORAGE_SERVICE_URL,
@@ -193,8 +274,32 @@ def test_successful_fixity_scan():
         assert len(parsed_report["failures"]["files"][category]) == 0
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/fixity_fail.yaml")
-def test_failed_fixity_scan():
+@mock.patch(
+    "requests.get",
+    side_effect=[
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {
+                    "failures": {
+                        "files": {
+                            "untracked": [],
+                            "changed": [
+                                {"path": "data/objects/oakland03.jp2"},
+                                {"path": "manifest-sha512.txt"},
+                            ],
+                            "missing": [],
+                        }
+                    },
+                    "message": "invalid bag",
+                    "success": False,
+                },
+            },
+            spec=requests.Response,
+        )
+    ],
+)
+def test_failed_fixity_scan(_get):
     success, report = storage_service.scan_aip(
         "c8ebb75e-6b7a-46dd-a360-91d3753d7b72",
         STORAGE_SERVICE_URL,
@@ -215,8 +320,10 @@ def test_failed_fixity_scan():
         assert len(parsed_report["failures"]["files"][category]) == 0
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/fixity_500.yaml")
-def test_fixity_scan_raises_on_500():
+@mock.patch(
+    "requests.get", side_effect=[mock.Mock(status_code=500, spec=requests.Response)]
+)
+def test_fixity_scan_raises_on_500(_get):
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.scan_aip(
             "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",
@@ -229,8 +336,10 @@ def test_fixity_scan_raises_on_500():
     assert "internal error" in str(ex.value)
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/fixity_non_200.yaml")
-def test_fixity_scan_raises_on_non_200():
+@mock.patch(
+    "requests.get", side_effect=[mock.Mock(status_code=504, spec=requests.Response)]
+)
+def test_fixity_scan_raises_on_non_200(_get):
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.scan_aip(
             "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",
@@ -261,8 +370,10 @@ def test_fixity_scan_raises_on_invalid_url():
     assert any(msg in str(ex.value) for msg in error_msgs)
 
 
-@vcr.use_cassette("fixtures/vcr_cassettes/fixity_bad_auth.yaml")
-def test_fixity_scan_raises_with_bad_auth():
+@mock.patch(
+    "requests.get", side_effect=[mock.Mock(status_code=401, spec=requests.Response)]
+)
+def test_fixity_scan_raises_with_bad_auth(_get):
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.scan_aip(
             "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",

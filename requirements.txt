@@ -12,9 +12,9 @@ greenlet==3.0.3
     # via sqlalchemy
 idna==3.7
     # via requests
-requests==2.31.0
+requests==2.32.1
     # via fixity (pyproject.toml)
-sqlalchemy==2.0.29
+sqlalchemy==2.0.30
     # via fixity (pyproject.toml)
 typing-extensions==4.11.0
     # via sqlalchemy

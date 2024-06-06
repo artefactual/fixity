@@ -1,8 +1,8 @@
-import calendar
 import json
 import sys
 import uuid
 from datetime import datetime
+from datetime import timezone
 from unittest import mock
 
 import pytest
@@ -74,6 +74,24 @@ def test_scan(_get, mock_check_fixity):
     ]
 
 
+def setup_dt_mock(mock, t):
+    d = datetime.fromtimestamp(t, timezone.utc)
+    mock.utcnow.return_value = d
+    mock.side_effect = lambda *args, **kw: datetime(*args, **kw)
+
+
+@pytest.fixture
+def start_time():
+    result = 1514775600
+    with mock.patch("fixity.fixity.datetime") as fixity_datetime, mock.patch(
+        "fixity.storage_service.datetime"
+    ) as storage_service_datetime:
+        setup_dt_mock(fixity_datetime, result)
+        setup_dt_mock(storage_service_datetime, result)
+
+        yield result
+
+
 @mock.patch(
     "requests.get",
 )
@@ -84,7 +102,7 @@ def test_scan(_get, mock_check_fixity):
         mock.Mock(status_code=201, spec=requests.Response),
     ],
 )
-def test_scan_if_report_url_exists(_post, _get, mock_check_fixity):
+def test_scan_if_report_url_exists(_post, _get, mock_check_fixity, start_time):
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
 
@@ -99,7 +117,6 @@ def test_scan_if_report_url_exists(_post, _get, mock_check_fixity):
 
     assert response is True
 
-    start_time = int(calendar.timegm(datetime.utcnow().utctimetuple()))
     assert _get.mock_calls == [
         mock.call(
             f"{STORAGE_SERVICE_URL}api/v2/file/{aip_id}/",

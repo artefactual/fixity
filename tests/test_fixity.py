@@ -440,7 +440,7 @@ def test_main_scan(_get, monkeypatch, mock_check_fixity):
     ],
 )
 @mock.patch.object(fixity, "Session", lambda: SESSION)
-def test_main_scanall_handles_exceptions(_get, monkeypatch, capsys):
+def test_main_handles_exceptions_if_scanall(_get, monkeypatch, capsys):
     monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
     monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
     monkeypatch.setenv("STORAGE_SERVICE_KEY", STORAGE_SERVICE_KEY)
@@ -450,6 +450,6 @@ def test_main_scanall_handles_exceptions(_get, monkeypatch, capsys):
 
     captured = capsys.readouterr()
     assert (
-        "Internal error encountered while scanning AIP 77adb748-8d9c-47ec-b593-53465749ce0e (StorageServiceError)\n"
-        == captured.out
+        "Internal error encountered while scanning AIP 77adb748-8d9c-47ec-b593-53465749ce0e (StorageServiceError)"
+        == captured.out.strip()
     )

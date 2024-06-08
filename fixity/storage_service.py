@@ -5,9 +5,9 @@ from datetime import datetime
 import requests
 from sqlalchemy.orm.exc import NoResultFound
 
+from . import utils
 from .models import AIP
 from .models import Report
-from .utils import check_valid_uuid
 
 
 UNABLE_TO_CONNECT_ERROR = (
@@ -103,7 +103,7 @@ def get_single_aip(uuid, ss_url, ss_user, ss_key):
     Given an AIP UUID, fetches a dict with full information on the AIP
     from the storage service.
     """
-    check_valid_uuid(uuid)
+    utils.check_valid_uuid(uuid)
 
     params = {"username": ss_user, "api_key": ss_key}
     try:
@@ -182,7 +182,7 @@ def scan_aip(
     if isinstance(aip_uuid, AIP):
         aip = aip_uuid
     else:
-        check_valid_uuid(aip_uuid)
+        utils.check_valid_uuid(aip_uuid)
 
         try:
             aip = session.query(AIP).filter_by(uuid=aip_uuid).one()

@@ -190,7 +190,7 @@ def scan_aip(
             aip = AIP(uuid=aip_uuid)
 
     if not start_time:
-        begun = datetime.utcnow()
+        begun = utils.utcnow()
     else:
         begun = start_time
 
@@ -203,7 +203,7 @@ def scan_aip(
         )
     except requests.ConnectionError:
         raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
-    ended = datetime.utcnow()
+    ended = utils.utcnow()
 
     begun_int = int(calendar.timegm(begun.utctimetuple()))
     ended_int = int(calendar.timegm(ended.utctimetuple()))

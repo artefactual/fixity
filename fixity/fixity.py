@@ -3,12 +3,12 @@ import os
 import sys
 import traceback
 from argparse import ArgumentParser
-from datetime import datetime
 from time import sleep
 from uuid import uuid4
 
 from . import reporting
 from . import storage_service
+from . import utils
 from .models import Report
 from .models import Session
 
@@ -123,7 +123,7 @@ def scan(
     # while attempting to respond to the request.
     storage_service.get_single_aip(aip, ss_url, ss_user, ss_key)
 
-    start_time = datetime.utcnow()
+    start_time = utils.utcnow()
 
     try:
         if report_url:

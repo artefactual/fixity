@@ -74,27 +74,8 @@ def test_scan(_get, mock_check_fixity):
     ]
 
 
-def setup_dt_mock(mock, t):
-    d = datetime.fromtimestamp(t, timezone.utc)
-    mock.utcnow.return_value = d
-    mock.side_effect = lambda *args, **kw: datetime(*args, **kw)
-
-
-@pytest.fixture
-def start_time():
-    result = 1514775600
-    with mock.patch("fixity.fixity.datetime") as fixity_datetime, mock.patch(
-        "fixity.storage_service.datetime"
-    ) as storage_service_datetime:
-        setup_dt_mock(fixity_datetime, result)
-        setup_dt_mock(storage_service_datetime, result)
-
-        yield result
-
-
-@mock.patch(
-    "requests.get",
-)
+@mock.patch("fixity.utils.utcnow")
+@mock.patch("requests.get")
 @mock.patch(
     "requests.post",
     side_effect=[
@@ -102,8 +83,10 @@ def start_time():
         mock.Mock(status_code=201, spec=requests.Response),
     ],
 )
-def test_scan_if_report_url_exists(_post, _get, mock_check_fixity, start_time):
+def test_scan_if_report_url_exists(_post, _get, utcnow, mock_check_fixity):
     _get.side_effect = mock_check_fixity
+    start_time = 1514775600
+    utcnow.return_value = datetime.fromtimestamp(start_time, timezone.utc)
     aip_id = uuid.uuid4()
 
     response = fixity.scan(

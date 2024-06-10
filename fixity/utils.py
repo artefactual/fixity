@@ -1,3 +1,5 @@
+from datetime import datetime
+from datetime import timezone
 from uuid import UUID
 
 
@@ -27,3 +29,7 @@ def check_valid_uuid(uuid):
         raise InvalidUUID(uuid)
 
     return True
+
+
+def utcnow():
+    return datetime.now(timezone.utc)

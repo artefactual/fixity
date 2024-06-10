@@ -5,9 +5,9 @@ from datetime import datetime
 import requests
 from sqlalchemy.orm.exc import NoResultFound
 
+from . import utils
 from .models import AIP
 from .models import Report
-from .utils import check_valid_uuid
 
 
 UNABLE_TO_CONNECT_ERROR = (
@@ -103,7 +103,7 @@ def get_single_aip(uuid, ss_url, ss_user, ss_key):
     Given an AIP UUID, fetches a dict with full information on the AIP
     from the storage service.
     """
-    check_valid_uuid(uuid)
+    utils.check_valid_uuid(uuid)
 
     params = {"username": ss_user, "api_key": ss_key}
     try:
@@ -182,7 +182,7 @@ def scan_aip(
     if isinstance(aip_uuid, AIP):
         aip = aip_uuid
     else:
-        check_valid_uuid(aip_uuid)
+        utils.check_valid_uuid(aip_uuid)
 
         try:
             aip = session.query(AIP).filter_by(uuid=aip_uuid).one()
@@ -190,7 +190,7 @@ def scan_aip(
             aip = AIP(uuid=aip_uuid)
 
     if not start_time:
-        begun = datetime.utcnow()
+        begun = utils.utcnow()
     else:
         begun = start_time
 
@@ -203,7 +203,7 @@ def scan_aip(
         )
     except requests.ConnectionError:
         raise StorageServiceError(UNABLE_TO_CONNECT_ERROR.format(ss_url))
-    ended = datetime.utcnow()
+    ended = utils.utcnow()
 
     begun_int = int(calendar.timegm(begun.utctimetuple()))
     ended_int = int(calendar.timegm(ended.utctimetuple()))

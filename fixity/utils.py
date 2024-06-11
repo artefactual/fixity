@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime
 from datetime import timezone
 from uuid import UUID
@@ -33,3 +34,10 @@ def check_valid_uuid(uuid):
 
 def utcnow():
     return datetime.now(timezone.utc)
+
+
+def pyprint(message):
+    if message.startswith("Internal error encountered"):
+        print(message, file=sys.stdout)
+    else:
+        print(message, file=sys.stderr)

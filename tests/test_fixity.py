@@ -171,6 +171,7 @@ def test_scan_handles_exceptions_if_report_url_exists(
     assert response is True
 
     captured = capsys.readouterr()
+    assert captured.out.strip() == ""
     assert captured.err.strip() == "\n".join(
         [
             f"Unable to POST pre-scan report to {REPORT_URL}",
@@ -213,6 +214,7 @@ def test_scan_handles_exceptions(_get, capsys):
     assert response is None
 
     captured = capsys.readouterr()
+    assert captured.out.strip() == ""
     assert (
         f'Storage service at "{STORAGE_SERVICE_URL}" encountered an internal error while scanning AIP {aip_id}\n'
         == captured.err
@@ -316,6 +318,7 @@ def test_scanall(_get, capsys, mock_check_fixity):
     assert response is True
 
     captured = capsys.readouterr()
+    assert captured.out.strip() == ""
     expected_output = "\n".join(
         [
             f"Fixity scan succeeded for AIP: {aip1_uuid}",
@@ -382,8 +385,15 @@ def test_scanall_handles_exceptions(_get, capsys):
 
     captured = capsys.readouterr()
     assert (
-        "Internal error encountered while scanning AIP 77adb748-8d9c-47ec-b593-53465749ce0e (StorageServiceError)\n"
-        in captured.out
+        captured.out.strip()
+        == "Internal error encountered while scanning AIP 77adb748-8d9c-47ec-b593-53465749ce0e (StorageServiceError)"
+    )
+
+    assert captured.err.strip() == "\n".join(
+        [
+            f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP 32f62f8b-ecfd-419e-a3e9-911ec23d0573',
+            "Successfully scanned 2 AIPs",
+        ]
     )
 
 
@@ -402,6 +412,7 @@ def test_main_scan(_get, monkeypatch, mock_check_fixity, capsys):
     assert result == 0
 
     captured = capsys.readouterr()
+    assert captured.out.strip() == ""
     assert captured.err.strip() == f"Fixity scan succeeded for AIP: {aip_id}"
 
 
@@ -464,4 +475,10 @@ def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch, capsys):
     assert (
         captured.out.strip()
         == f"Internal error encountered while scanning AIP {aip_id} (StorageServiceError)"
+    )
+    assert captured.err.strip() == "\n".join(
+        [
+            f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP 32f62f8b-ecfd-419e-a3e9-911ec23d0573',
+            "Successfully scanned 2 AIPs",
+        ]
     )

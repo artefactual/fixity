@@ -135,7 +135,7 @@ def scan(
                 session_id=session_id,
             )
     except reporting.ReportServiceException:
-        print(f"Unable to POST pre-scan report to {report_url}", file=sys.stderr)
+        utils.pyprint(f"Unable to POST pre-scan report to {report_url}")
 
     try:
         status, report = storage_service.scan_aip(
@@ -148,9 +148,9 @@ def scan(
             force_local=force_local,
         )
         report_data = json.loads(report.report)
-        print(scan_message(aip, status, report_data["message"]), file=sys.stderr)
+        utils.pyprint(scan_message(aip, status, report_data["message"]))
     except Exception as e:
-        print(str(e), file=sys.stderr)
+        utils.pyprint(str(e))
         status = None
         if hasattr(e, "report") and e.report:
             report = e.report
@@ -181,10 +181,7 @@ def scan(
                 aip, report, report_url, report_auth=report_auth, session_id=session_id
             )
         except reporting.ReportServiceException:
-            print(
-                f"Unable to POST report for AIP {aip} to remote service",
-                file=sys.stderr,
-            )
+            utils.pyprint(f"Unable to POST report for AIP {aip} to remote service")
 
     if report:
         session.add(report)
@@ -240,17 +237,15 @@ def scanall(
             if not scan_success:
                 success = False
         except Exception as e:
-            print(
-                "Internal error encountered while scanning AIP {} ({})".format(
-                    aip["uuid"], type(e).__name__
-                )
+            utils.pyprint(
+                f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
+                file=sys.stdout,
             )
-
         if throttle_time:
             sleep(throttle_time)
 
     if count > 0:
-        print("Successfully scanned", count, "AIPs", file=sys.stderr)
+        utils.pyprint(f"Successfully scanned {count} AIPs")
 
     return success
 

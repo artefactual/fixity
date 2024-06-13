@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime
 from datetime import timezone
 from uuid import UUID
@@ -33,3 +34,7 @@ def check_valid_uuid(uuid):
 
 def utcnow():
     return datetime.now(timezone.utc)
+
+
+def pyprint(message, **kwargs):
+    print(message, file=kwargs.get("file", sys.stderr))

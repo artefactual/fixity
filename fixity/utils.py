@@ -36,8 +36,5 @@ def utcnow():
     return datetime.now(timezone.utc)
 
 
-def pyprint(message):
-    if message.startswith("Internal error encountered"):
-        print(message, file=sys.stdout)
-    else:
-        print(message, file=sys.stderr)
+def pyprint(message, **kwargs):
+    print(message, file=kwargs.get("file", sys.stderr))

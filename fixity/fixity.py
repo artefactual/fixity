@@ -238,7 +238,8 @@ def scanall(
                 success = False
         except Exception as e:
             utils.pyprint(
-                f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})"
+                f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
+                file=sys.stdout,
             )
         if throttle_time:
             sleep(throttle_time)

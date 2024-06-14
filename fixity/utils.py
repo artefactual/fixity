@@ -36,5 +36,11 @@ def utcnow():
     return datetime.now(timezone.utc)
 
 
+def format_timestamp(t):
+    return t.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+
 def pyprint(message, **kwargs):
+    if kwargs.get("display_time"):
+        message = f"{[format_timestamp(utcnow())]} " + message
     print(message, file=kwargs.get("file", sys.stderr))

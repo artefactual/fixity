@@ -40,6 +40,11 @@ def parse_arguments():
         action="store_true",
         help="Force a local fixity check on the Storage Service.",
     )
+    parser.add_argument(
+        "--timestamp",
+        action="store_true",
+        help="Display the timestamp of the AIP fixity scan.",
+    )
     args = parser.parse_args()
 
     validate_arguments(args)
@@ -99,6 +104,7 @@ def scan(
     report_auth=(),
     session_id=None,
     force_local=False,
+    timestamp=False,
 ):
     """
     Instruct the storage service to scan a single AIP.
@@ -135,7 +141,9 @@ def scan(
                 session_id=session_id,
             )
     except reporting.ReportServiceException:
-        utils.pyprint(f"Unable to POST pre-scan report to {report_url}")
+        utils.pyprint(
+            f"Unable to POST pre-scan report to {report_url}", display_time=timestamp
+        )
 
     try:
         status, report = storage_service.scan_aip(
@@ -148,9 +156,11 @@ def scan(
             force_local=force_local,
         )
         report_data = json.loads(report.report)
-        utils.pyprint(scan_message(aip, status, report_data["message"]))
+        utils.pyprint(
+            scan_message(aip, status, report_data["message"]), display_time=timestamp
+        )
     except Exception as e:
-        utils.pyprint(str(e))
+        utils.pyprint(str(e), display_time=timestamp)
         status = None
         if hasattr(e, "report") and e.report:
             report = e.report
@@ -179,7 +189,10 @@ def scan(
                 aip, report, report_url, report_auth=report_auth, session_id=session_id
             )
         except reporting.ReportServiceException:
-            utils.pyprint(f"Unable to POST report for AIP {aip} to remote service")
+            utils.pyprint(
+                f"Unable to POST report for AIP {aip} to remote service",
+                display_time=timestamp,
+            )
 
     if report:
         session.add(report)
@@ -196,6 +209,7 @@ def scanall(
     report_auth=(),
     throttle_time=0,
     force_local=False,
+    timestamp=False,
 ):
     """
     Run a fixity scan on every AIP in a storage service instance.
@@ -206,7 +220,8 @@ def scanall(
     :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be transmitted.
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param int throttle_time: Time to wait between scans.
-    :param bool force_local: If True, will will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
+    :param bool force_local: If True, will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
+    :param bool timestamp: If True, will display the local time stamp of the AIP fixity scan.
     """
     success = True
 
@@ -231,6 +246,7 @@ def scanall(
                 report_auth=report_auth,
                 session_id=session_id,
                 force_local=force_local,
+                timestamp=timestamp,
             )
             if not scan_success:
                 success = False
@@ -238,12 +254,13 @@ def scanall(
             utils.pyprint(
                 f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
                 file=sys.stdout,
+                display_time=timestamp,
             )
         if throttle_time:
             sleep(throttle_time)
 
     if count > 0:
-        utils.pyprint(f"Successfully scanned {count} AIPs")
+        utils.pyprint(f"Successfully scanned {count} AIPs", display_time=timestamp)
 
     return success
 
@@ -283,6 +300,7 @@ def main():
                 report_auth=auth,
                 throttle_time=args.throttle,
                 force_local=args.force_local,
+                timestamp=args.timestamp,
             )
         elif args.command == "scan":
             session_id = str(uuid4())
@@ -296,6 +314,7 @@ def main():
                 report_auth=auth,
                 session_id=session_id,
                 force_local=args.force_local,
+                timestamp=args.timestamp,
             )
         else:
             return Exception(f'Error: "{args.command}" is not a valid command.')

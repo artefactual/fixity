@@ -10,7 +10,6 @@ import requests
 
 from fixity import fixity
 from fixity import reporting
-from fixity import utils
 from fixity.models import Report
 from fixity.models import Session
 
@@ -75,10 +74,13 @@ def test_scan(_get, mock_check_fixity):
     ]
 
 
+@mock.patch("fixity.utils.utcnow")
 @mock.patch("requests.get")
-def test_scan_if_timestamp_exists(_get, mock_check_fixity, capsys):
+def test_scan_if_timestamps_is_True(_get, utcnow, mock_check_fixity, capsys):
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
+    timestamp = 1514775600
+    utcnow.return_value = datetime.fromtimestamp(timestamp, timezone.utc)
 
     response = fixity.scan(
         aip=str(aip_id),
@@ -86,7 +88,7 @@ def test_scan_if_timestamp_exists(_get, mock_check_fixity, capsys):
         ss_user=STORAGE_SERVICE_USER,
         ss_key=STORAGE_SERVICE_KEY,
         session=SESSION,
-        timestamp=True,
+        timestamps=True,
     )
 
     assert response is True
@@ -95,7 +97,7 @@ def test_scan_if_timestamp_exists(_get, mock_check_fixity, capsys):
     assert captured.out == ""
     assert (
         captured.err.strip()
-        == f"['{utils.utcnow().strftime('%Y-%m-%d %H:%M:%S %Z')}'] Fixity scan succeeded for AIP: {aip_id}"
+        == f"['2018-01-01 03:00:00 UTC'] Fixity scan succeeded for AIP: {aip_id}"
     )
     assert _get.mock_calls == [
         mock.call(

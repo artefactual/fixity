@@ -100,15 +100,11 @@ def post_success_report(aip, report, report_url, report_auth=(), session_id=None
 
     if response.status_code == 500:
         raise ReportServiceException(
-            "Report service encountered an internal error when attempting to POST report for AIP {}".format(
-                aip
-            )
+            f"Report service encountered an internal error when attempting to POST report for AIP {aip}"
         )
     elif response.status_code != 201:
         raise ReportServiceException(
-            "Report service returned {} when attempting to POST report for AIP {}".format(
-                response.status_code, aip
-            )
+            f"Report service returned {response.status_code} when attempting to POST report for AIP {aip}"
         )
 
     return report.posted

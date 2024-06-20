@@ -10,7 +10,6 @@ from fixity.models import AIP
 from fixity.models import Report
 from fixity.utils import InvalidUUID
 
-
 REPORT_URL = "http://localhost:8003/"
 
 

@@ -8,7 +8,6 @@ from fixity import storage_service
 from fixity.models import Session
 from fixity.utils import InvalidUUID
 
-
 SESSION = Session()
 STORAGE_SERVICE_URL = "http://localhost:8000/"
 STORAGE_SERVICE_USER = "test"

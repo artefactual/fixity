@@ -159,9 +159,7 @@ def scan(
         else:
             report_dict = {
                 "success": "None",
-                "message": "Exception encountered while scanning AIP {}: {} ({})".format(
-                    aip, type(e).__name__, str(e)
-                ),
+                "message": f"Exception encountered while scanning AIP {aip}: {type(e).__name__} ({str(e)})",
                 "traceback": traceback.format_exc(),
                 "errors": None,
             }

@@ -46,6 +46,8 @@ pytest-cov==5.0.0
     # via fixity (pyproject.toml)
 requests==2.32.3
     # via fixity (pyproject.toml)
+ruff==0.4.9
+    # via fixity (pyproject.toml)
 sqlalchemy==2.0.31
     # via fixity (pyproject.toml)
 tomli==2.0.1

@@ -97,7 +97,7 @@ def test_scan_if_timestamps_is_True(_get, utcnow, mock_check_fixity, capsys):
     assert captured.out == ""
     assert (
         captured.err.strip()
-        == f"['2018-01-01 03:00:00 UTC'] Fixity scan succeeded for AIP: {aip_id}"
+        == f"[2018-01-01 03:00:00 UTC] Fixity scan succeeded for AIP: {aip_id}"
     )
     assert _get.mock_calls == [
         mock.call(

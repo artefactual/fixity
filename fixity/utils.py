@@ -42,5 +42,5 @@ def format_timestamp(t):
 
 def pyprint(message, **kwargs):
     if kwargs.get("timestamps"):
-        message = f"{[format_timestamp(utcnow())]} {message}"
+        message = f"[{format_timestamp(utcnow())}] {message}"
     print(message, file=kwargs.get("file", sys.stderr))

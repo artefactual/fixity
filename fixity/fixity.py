@@ -40,6 +40,11 @@ def parse_arguments():
         action="store_true",
         help="Force a local fixity check on the Storage Service.",
     )
+    parser.add_argument(
+        "--timestamps",
+        action="store_true",
+        help="Add a timestamp to the beginning of each line of output.",
+    )
     args = parser.parse_args()
 
     validate_arguments(args)
@@ -99,6 +104,7 @@ def scan(
     report_auth=(),
     session_id=None,
     force_local=False,
+    timestamps=False,
 ):
     """
     Instruct the storage service to scan a single AIP.
@@ -114,7 +120,8 @@ def scan(
     :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be     transmitted.
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param session_id: Identifier for this session, allowing every scan from one run to be identified.
-    :param bool force_local: If True, will will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
+    :param bool force_local: If True, will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
+    :param bool timestamps: If True, will add a timestamp to the beginning of each line of output.
     """
 
     # Ensure the storage service knows about this AIP first;
@@ -135,7 +142,9 @@ def scan(
                 session_id=session_id,
             )
     except reporting.ReportServiceException:
-        utils.pyprint(f"Unable to POST pre-scan report to {report_url}")
+        utils.pyprint(
+            f"Unable to POST pre-scan report to {report_url}", timestamps=timestamps
+        )
 
     try:
         status, report = storage_service.scan_aip(
@@ -148,9 +157,11 @@ def scan(
             force_local=force_local,
         )
         report_data = json.loads(report.report)
-        utils.pyprint(scan_message(aip, status, report_data["message"]))
+        utils.pyprint(
+            scan_message(aip, status, report_data["message"]), timestamps=timestamps
+        )
     except Exception as e:
-        utils.pyprint(str(e))
+        utils.pyprint(str(e), timestamps=timestamps)
         status = None
         if hasattr(e, "report") and e.report:
             report = e.report
@@ -179,7 +190,10 @@ def scan(
                 aip, report, report_url, report_auth=report_auth, session_id=session_id
             )
         except reporting.ReportServiceException:
-            utils.pyprint(f"Unable to POST report for AIP {aip} to remote service")
+            utils.pyprint(
+                f"Unable to POST report for AIP {aip} to remote service",
+                timestamps=timestamps,
+            )
 
     if report:
         session.add(report)
@@ -196,6 +210,7 @@ def scanall(
     report_auth=(),
     throttle_time=0,
     force_local=False,
+    timestamps=False,
 ):
     """
     Run a fixity scan on every AIP in a storage service instance.
@@ -206,7 +221,8 @@ def scanall(
     :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be transmitted.
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param int throttle_time: Time to wait between scans.
-    :param bool force_local: If True, will will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
+    :param bool force_local: If True, will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
+    :param bool timestamps: If True, will add a timestamp to the beginning of each line of output.
     """
     success = True
 
@@ -231,6 +247,7 @@ def scanall(
                 report_auth=report_auth,
                 session_id=session_id,
                 force_local=force_local,
+                timestamps=timestamps,
             )
             if not scan_success:
                 success = False
@@ -238,12 +255,13 @@ def scanall(
             utils.pyprint(
                 f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
                 file=sys.stdout,
+                timestamps=timestamps,
             )
         if throttle_time:
             sleep(throttle_time)
 
     if count > 0:
-        utils.pyprint(f"Successfully scanned {count} AIPs")
+        utils.pyprint(f"Successfully scanned {count} AIPs", timestamps=timestamps)
 
     return success
 
@@ -283,6 +301,7 @@ def main():
                 report_auth=auth,
                 throttle_time=args.throttle,
                 force_local=args.force_local,
+                timestamps=args.timestamps,
             )
         elif args.command == "scan":
             session_id = str(uuid4())
@@ -296,6 +315,7 @@ def main():
                 report_auth=auth,
                 session_id=session_id,
                 force_local=args.force_local,
+                timestamps=args.timestamps,
             )
         else:
             return Exception(f'Error: "{args.command}" is not a valid command.')

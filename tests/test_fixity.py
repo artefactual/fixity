@@ -76,7 +76,7 @@ def test_scan(_get, mock_check_fixity):
 
 @mock.patch("fixity.utils.utcnow")
 @mock.patch("requests.get")
-def test_scan_if_timestamps_is_True(_get, utcnow, mock_check_fixity, capsys):
+def test_scan_if_timestamps_argument_is_passed(_get, utcnow, mock_check_fixity, capsys):
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
     timestamp = 1514775600

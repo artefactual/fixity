@@ -36,7 +36,7 @@ running; see the section on _ENVIRONMENT VARIABLES_ for information.
     Print extra debugging output.
 
 * `--timestamps`:
-  It adds a timestamp to the beginning of each line of output.
+    It adds a timestamp to the beginning of each line of output.
 
 ## COMMANDS
 

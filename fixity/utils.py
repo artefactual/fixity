@@ -1,7 +1,10 @@
+import logging
 import sys
 from datetime import datetime
 from datetime import timezone
 from uuid import UUID
+
+logger = logging.getLogger(__name__)
 
 
 class InvalidUUID(Exception):
@@ -41,6 +44,9 @@ def format_timestamp(t):
 
 
 def pyprint(message, **kwargs):
+    file = kwargs.get("file", sys.stderr)
     if kwargs.get("timestamps"):
         message = f"[{format_timestamp(utcnow())}] {message}"
-    print(message, file=kwargs.get("file", sys.stderr))
+    print(message, file=file)
+    logger.warning(message)
+    return message

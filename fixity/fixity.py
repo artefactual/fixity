@@ -131,7 +131,6 @@ def scan(
     storage_service.get_single_aip(aip, ss_url, ss_user, ss_key)
 
     start_time = utils.utcnow()
-
     try:
         if report_url:
             reporting.post_pre_scan_report(

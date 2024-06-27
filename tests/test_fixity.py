@@ -1,4 +1,5 @@
 import json
+import logging
 import sys
 import uuid
 from datetime import datetime
@@ -49,6 +50,7 @@ def mock_check_fixity():
 
 @mock.patch("requests.get")
 def test_scan(_get, mock_check_fixity, caplog):
+    caplog.set_level(logging.NOTSET)
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
 
@@ -82,6 +84,7 @@ def test_scan(_get, mock_check_fixity, caplog):
 def test_scan_if_timestamps_argument_is_passed(
     _get, utcnow, mock_check_fixity, capsys, caplog
 ):
+    caplog.set_level(logging.NOTSET)
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
     timestamp = 1514775600
@@ -129,6 +132,7 @@ def test_scan_if_timestamps_argument_is_passed(
     ],
 )
 def test_scan_if_report_url_exists(_post, _get, utcnow, mock_check_fixity, caplog):
+    caplog.set_level(logging.NOTSET)
     _get.side_effect = mock_check_fixity
     start_time = 1514775600
     utcnow.return_value = datetime.fromtimestamp(start_time, timezone.utc)
@@ -203,6 +207,7 @@ def test_scan_if_report_url_exists(_post, _get, utcnow, mock_check_fixity, caplo
 def test_scan_handles_exceptions_if_report_url_exists(
     _post, _get, capsys, mock_check_fixity, caplog
 ):
+    caplog.set_level(logging.NOTSET)
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
 
@@ -253,6 +258,7 @@ def test_scan_handles_exceptions_if_report_url_exists(
     ],
 )
 def test_scan_handles_exceptions(_get, capsys, caplog):
+    caplog.set_level(logging.NOTSET)
     aip_id = uuid.uuid4()
 
     response = fixity.scan(
@@ -335,6 +341,7 @@ def test_scan_message(status, error_message):
     "requests.get",
 )
 def test_scanall(_get, capsys, mock_check_fixity, caplog):
+    caplog.set_level(logging.NOTSET)
     aip1_uuid = "41e12f76-354e-402d-85ee-f812cb72f6e6"
     aip2_uuid = "807ecfb7-08b1-4435-87ec-5c6bfbe62225"
     _get.side_effect = [
@@ -434,6 +441,8 @@ def test_scanall(_get, capsys, mock_check_fixity, caplog):
     ],
 )
 def test_scanall_handles_exceptions(_get, capsys, caplog):
+    caplog.set_level(logging.NOTSET)
+
     response = fixity.scanall(
         ss_url=STORAGE_SERVICE_URL,
         ss_user=STORAGE_SERVICE_USER,
@@ -465,6 +474,7 @@ def test_scanall_handles_exceptions(_get, capsys, caplog):
 @mock.patch("requests.get")
 @mock.patch.object(fixity, "Session", lambda: SESSION)
 def test_main_scan(_get, monkeypatch, mock_check_fixity, capsys, caplog):
+    caplog.set_level(logging.NOTSET)
     _get.side_effect = mock_check_fixity
     monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
     monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
@@ -487,6 +497,7 @@ def test_main_scan(_get, monkeypatch, mock_check_fixity, capsys, caplog):
 @mock.patch("requests.get")
 @mock.patch.object(fixity, "Session", lambda: SESSION)
 def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch, capsys, caplog):
+    caplog.set_level(logging.NOTSET)
     aip_id = str(uuid.uuid4())
     _get.side_effect = [
         mock.Mock(

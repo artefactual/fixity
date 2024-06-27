@@ -48,4 +48,5 @@ def pyprint(message, **kwargs):
     if kwargs.get("timestamps"):
         message = f"[{format_timestamp(utcnow())}] {message}"
     print(message, file=file)
+    logger.log(level=logging.INFO, msg=message)
     return message

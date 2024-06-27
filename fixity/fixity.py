@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import sys
 import traceback
@@ -12,14 +11,6 @@ from . import storage_service
 from . import utils
 from .models import Report
 from .models import Session
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    filename="fixity.log",
-    level=logging.INFO,
-    format="%(levelname)-8s %(asctime)s %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S %Z",
-)
 
 
 class ArgumentError(Exception):
@@ -140,6 +131,7 @@ def scan(
     storage_service.get_single_aip(aip, ss_url, ss_user, ss_key)
 
     start_time = utils.utcnow()
+
     try:
         if report_url:
             reporting.post_pre_scan_report(
@@ -150,10 +142,9 @@ def scan(
                 session_id=session_id,
             )
     except reporting.ReportServiceException:
-        logging.error(f"Unable to POST pre-scan report to {report_url}")
-        # utils.pyprint(
-        #     f"Unable to POST pre-scan report to {report_url}", timestamps=timestamps
-        # )
+        utils.pyprint(
+            f"Unable to POST pre-scan report to {report_url}", timestamps=timestamps
+        )
 
     try:
         status, report = storage_service.scan_aip(
@@ -166,13 +157,11 @@ def scan(
             force_local=force_local,
         )
         report_data = json.loads(report.report)
-        logging.info(scan_message(aip, status, report_data["message"]))
-        # utils.pyprint(
-        #     scan_message(aip, status, report_data["message"]), timestamps=timestamps
-        # )
+        utils.pyprint(
+            scan_message(aip, status, report_data["message"]), timestamps=timestamps
+        )
     except Exception as e:
-        logging.error(str(e))
-        # utils.pyprint(str(e), timestamps=timestamps)
+        utils.pyprint(str(e), timestamps=timestamps)
         status = None
         if hasattr(e, "report") and e.report:
             report = e.report
@@ -201,11 +190,10 @@ def scan(
                 aip, report, report_url, report_auth=report_auth, session_id=session_id
             )
         except reporting.ReportServiceException:
-            logging.error(f"Unable to POST report for AIP {aip} to remote service")
-            # utils.pyprint(
-            #     f"Unable to POST report for AIP {aip} to remote service",
-            #     timestamps=timestamps,
-            # )
+            utils.pyprint(
+                f"Unable to POST report for AIP {aip} to remote service",
+                timestamps=timestamps,
+            )
 
     if report:
         session.add(report)
@@ -264,20 +252,16 @@ def scanall(
             if not scan_success:
                 success = False
         except Exception as e:
-            logging.error(
-                f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})"
+            utils.pyprint(
+                f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
+                file=sys.stdout,
+                timestamps=timestamps,
             )
-            # utils.pyprint(
-            #     f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
-            #     file=sys.stdout,
-            #     timestamps=timestamps,
-            # )
         if throttle_time:
             sleep(throttle_time)
 
     if count > 0:
-        logging.info(f"Successfully scanned {count} AIPs")
-        # utils.pyprint(f"Successfully scanned {count} AIPs", timestamps=timestamps)
+        utils.pyprint(f"Successfully scanned {count} AIPs", timestamps=timestamps)
 
     return success
 

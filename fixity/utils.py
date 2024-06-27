@@ -1,5 +1,4 @@
 import logging
-import sys
 from datetime import datetime
 from datetime import timezone
 from uuid import UUID
@@ -44,9 +43,7 @@ def format_timestamp(t):
 
 
 def pyprint(message, **kwargs):
-    file = kwargs.get("file", sys.stderr)
     if kwargs.get("timestamps"):
         message = f"[{format_timestamp(utcnow())}] {message}"
-    print(message, file=file)
     logger.log(level=logging.INFO, msg=message)
     return message

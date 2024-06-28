@@ -1,3 +1,4 @@
+import logging
 import sys
 from datetime import datetime
 from datetime import timezone
@@ -45,3 +46,12 @@ def pyprint(message, logger, **kwargs):
         message = f"[{format_timestamp(utcnow())}] {message}"
     print(message, file=kwargs.get("file", sys.stderr))
     logger.info(message)
+
+
+def log_message(message, **kwargs):
+    if kwargs.get("timestamps"):
+        message = f"[{format_timestamp(utcnow())}] {message}"
+    console = logging.StreamHandler()
+    console.setLevel(logging.WARNING)
+    LOGGER = logging.getLogger(__name__).addHandler(console)
+    LOGGER.warning(message)

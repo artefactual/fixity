@@ -77,7 +77,9 @@ def test_scan(_get, mock_check_fixity):
 
 @mock.patch("fixity.utils.utcnow")
 @mock.patch("requests.get")
-def test_scan_if_timestamps_argument_is_passed(_get, utcnow, mock_check_fixity, capsys):
+def test_scan_if_timestamps_argument_is_passed(
+    _get, utcnow, mock_check_fixity, capsys, caplog
+):
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
     timestamp = 1514775600
@@ -100,6 +102,10 @@ def test_scan_if_timestamps_argument_is_passed(_get, utcnow, mock_check_fixity, 
         captured.err.strip()
         == f"[2018-01-01 03:00:00 UTC] Fixity scan succeeded for AIP: {aip_id}"
     )
+    assert [r.message for r in caplog.records] == [
+        f"[2018-01-01 03:00:00 UTC] Fixity scan succeeded for AIP: {aip_id}",
+    ]
+
     assert _get.mock_calls == [
         mock.call(
             f"{STORAGE_SERVICE_URL}api/v2/file/{aip_id}/",

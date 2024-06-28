@@ -150,6 +150,10 @@ def scan(
             LOGGER,
             timestamps=timestamps,
         )
+        utils.log_message(
+            f"Unable to POST pre-scan report to {report_url}",
+            timestamps=timestamps,
+        )
 
     try:
         status, report = storage_service.scan_aip(
@@ -167,8 +171,13 @@ def scan(
             LOGGER,
             timestamps=timestamps,
         )
+        utils.log_message(
+            scan_message(aip, status, report_data["message"]),
+            timestamps=timestamps,
+        )
     except Exception as e:
         utils.pyprint(str(e), LOGGER, timestamps=timestamps)
+        utils.log_message(str(e), timestamps=timestamps)
         status = None
         if hasattr(e, "report") and e.report:
             report = e.report
@@ -200,6 +209,10 @@ def scan(
             utils.pyprint(
                 f"Unable to POST report for AIP {aip} to remote service",
                 LOGGER,
+                timestamps=timestamps,
+            )
+            utils.log_message(
+                f"Unable to POST report for AIP {aip} to remote service",
                 timestamps=timestamps,
             )
 
@@ -266,6 +279,11 @@ def scanall(
                 file=sys.stdout,
                 timestamps=timestamps,
             )
+            utils.log_message(
+                f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
+                file=sys.stdout,
+                timestamps=timestamps,
+            )
         if throttle_time:
             sleep(throttle_time)
 
@@ -273,6 +291,7 @@ def scanall(
         utils.pyprint(
             f"Successfully scanned {count} AIPs", LOGGER, timestamps=timestamps
         )
+        utils.log_message(f"Successfully scanned {count} AIPs", timestamps=timestamps)
 
     return success
 

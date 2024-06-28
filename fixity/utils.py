@@ -40,7 +40,8 @@ def format_timestamp(t):
     return t.strftime("%Y-%m-%d %H:%M:%S %Z")
 
 
-def pyprint(message, **kwargs):
+def pyprint(message, logger, **kwargs):
     if kwargs.get("timestamps"):
         message = f"[{format_timestamp(utcnow())}] {message}"
     print(message, file=kwargs.get("file", sys.stderr))
+    logger.info(message)

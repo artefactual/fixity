@@ -1,4 +1,5 @@
 import json
+import logging
 import sys
 import uuid
 from datetime import datetime
@@ -519,3 +520,53 @@ def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch, capsys):
             "Successfully scanned 2 AIPs",
         ]
     )
+
+
+@mock.patch(
+    "requests.get",
+)
+def test_scanall_with_logging(_get, caplog, mock_check_fixity):
+    aip1_uuid = "41e12f76-354e-402d-85ee-f812cb72f6e6"
+    aip2_uuid = "807ecfb7-08b1-4435-87ec-5c6bfbe62225"
+    _get.side_effect = [
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {
+                    "meta": {"next": None},
+                    "objects": [
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": aip1_uuid,
+                        },
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": aip2_uuid,
+                        },
+                    ],
+                },
+            },
+            spec=requests.Response,
+        ),
+        *mock_check_fixity,
+        *mock_check_fixity,
+    ]
+    caplog.set_level(logging.INFO)
+
+    response = fixity.scanall(
+        ss_url=STORAGE_SERVICE_URL,
+        ss_user=STORAGE_SERVICE_USER,
+        ss_key=STORAGE_SERVICE_KEY,
+        session=SESSION,
+    )
+
+    assert response is True
+
+    expected_log_records = [
+        f"Fixity scan succeeded for AIP: {aip1_uuid}",
+        f"Fixity scan succeeded for AIP: {aip2_uuid}",
+        "Successfully scanned 2 AIPs",
+    ]
+    assert [r.message for r in caplog.records] == expected_log_records

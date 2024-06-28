@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import sys
 import traceback
@@ -11,6 +12,8 @@ from . import storage_service
 from . import utils
 from .models import Report
 from .models import Session
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ArgumentError(Exception):
@@ -143,7 +146,9 @@ def scan(
             )
     except reporting.ReportServiceException:
         utils.pyprint(
-            f"Unable to POST pre-scan report to {report_url}", timestamps=timestamps
+            f"Unable to POST pre-scan report to {report_url}",
+            LOGGER,
+            timestamps=timestamps,
         )
 
     try:
@@ -158,10 +163,12 @@ def scan(
         )
         report_data = json.loads(report.report)
         utils.pyprint(
-            scan_message(aip, status, report_data["message"]), timestamps=timestamps
+            scan_message(aip, status, report_data["message"]),
+            LOGGER,
+            timestamps=timestamps,
         )
     except Exception as e:
-        utils.pyprint(str(e), timestamps=timestamps)
+        utils.pyprint(str(e), LOGGER, timestamps=timestamps)
         status = None
         if hasattr(e, "report") and e.report:
             report = e.report
@@ -192,6 +199,7 @@ def scan(
         except reporting.ReportServiceException:
             utils.pyprint(
                 f"Unable to POST report for AIP {aip} to remote service",
+                LOGGER,
                 timestamps=timestamps,
             )
 
@@ -254,6 +262,7 @@ def scanall(
         except Exception as e:
             utils.pyprint(
                 f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
+                LOGGER,
                 file=sys.stdout,
                 timestamps=timestamps,
             )
@@ -261,7 +270,9 @@ def scanall(
             sleep(throttle_time)
 
     if count > 0:
-        utils.pyprint(f"Successfully scanned {count} AIPs", timestamps=timestamps)
+        utils.pyprint(
+            f"Successfully scanned {count} AIPs", LOGGER, timestamps=timestamps
+        )
 
     return success
 

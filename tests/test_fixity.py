@@ -506,9 +506,7 @@ def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch, capsys):
     assert result == 1
 
     captured = capsys.readouterr()
-
     assert captured.out.strip() == ""
-
     assert captured.err.strip() == "\n".join(
         [
             f"Internal error encountered while scanning AIP {aip_id} (StorageServiceError)",

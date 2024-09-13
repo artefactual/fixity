@@ -421,13 +421,10 @@ def test_scanall_handles_exceptions(_get, capsys):
     assert response is False
 
     captured = capsys.readouterr()
-    assert (
-        captured.out.strip()
-        == "Internal error encountered while scanning AIP 77adb748-8d9c-47ec-b593-53465749ce0e (StorageServiceError)"
-    )
 
     assert captured.err.strip() == "\n".join(
         [
+            "Internal error encountered while scanning AIP 77adb748-8d9c-47ec-b593-53465749ce0e (StorageServiceError)",
             f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP 32f62f8b-ecfd-419e-a3e9-911ec23d0573',
             "Successfully scanned 2 AIPs",
         ]
@@ -509,12 +506,12 @@ def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch, capsys):
     assert result == 1
 
     captured = capsys.readouterr()
-    assert (
-        captured.out.strip()
-        == f"Internal error encountered while scanning AIP {aip_id} (StorageServiceError)"
-    )
+
+    assert captured.out.strip() == ""
+
     assert captured.err.strip() == "\n".join(
         [
+            f"Internal error encountered while scanning AIP {aip_id} (StorageServiceError)",
             f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP 32f62f8b-ecfd-419e-a3e9-911ec23d0573',
             "Successfully scanned 2 AIPs",
         ]

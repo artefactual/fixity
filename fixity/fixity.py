@@ -1,8 +1,11 @@
 import json
+import logging
 import os
 import sys
 import traceback
 from argparse import ArgumentParser
+from datetime import datetime
+from datetime import timezone
 from time import sleep
 from uuid import uuid4
 
@@ -22,7 +25,7 @@ def validate_arguments(args):
         raise ArgumentError("An AIP UUID must be specified when scanning a single AIP")
 
 
-def parse_arguments():
+def parse_arguments(argument):
     parser = ArgumentParser()
     parser.add_argument("command", choices=["scan", "scanall"], help="Command to run.")
     parser.add_argument("aip", nargs="?", help="If 'scan', UUID of the AIP to scan")
@@ -45,7 +48,7 @@ def parse_arguments():
         action="store_true",
         help="Add a timestamp to the beginning of each line of output.",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argument)
 
     validate_arguments(args)
     return args
@@ -100,6 +103,7 @@ def scan(
     ss_user,
     ss_key,
     session,
+    logger,
     report_url=None,
     report_auth=(),
     session_id=None,
@@ -123,7 +127,6 @@ def scan(
     :param bool force_local: If True, will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
     :param bool timestamps: If True, will add a timestamp to the beginning of each line of output.
     """
-
     # Ensure the storage service knows about this AIP first;
     # get_single_aip() will raise an exception if the storage service
     # does not have an AIP with that UUID, or otherwise errors out
@@ -142,10 +145,7 @@ def scan(
                 session_id=session_id,
             )
     except reporting.ReportServiceException:
-        utils.pyprint(
-            f"Unable to POST pre-scan report to {report_url}", timestamps=timestamps
-        )
-
+        logger.log(logging.WARNING, f"Unable to POST pre-scan report to {report_url}")
     try:
         status, report = storage_service.scan_aip(
             aip,
@@ -157,11 +157,10 @@ def scan(
             force_local=force_local,
         )
         report_data = json.loads(report.report)
-        utils.pyprint(
-            scan_message(aip, status, report_data["message"]), timestamps=timestamps
-        )
+        logger.log(logging.WARNING, scan_message(aip, status, report_data["message"]))
     except Exception as e:
-        utils.pyprint(str(e), timestamps=timestamps)
+        logger.log(logging.WARNING, str(e))
+
         status = None
         if hasattr(e, "report") and e.report:
             report = e.report
@@ -190,11 +189,10 @@ def scan(
                 aip, report, report_url, report_auth=report_auth, session_id=session_id
             )
         except reporting.ReportServiceException:
-            utils.pyprint(
+            logger.log(
+                logging.WARNING,
                 f"Unable to POST report for AIP {aip} to remote service",
-                timestamps=timestamps,
             )
-
     if report:
         session.add(report)
 
@@ -206,6 +204,7 @@ def scanall(
     ss_user,
     ss_key,
     session,
+    logger,
     report_url=None,
     report_auth=(),
     throttle_time=0,
@@ -243,6 +242,7 @@ def scanall(
                 ss_user,
                 ss_key,
                 session,
+                logger,
                 report_url=report_url,
                 report_auth=report_auth,
                 session_id=session_id,
@@ -252,24 +252,23 @@ def scanall(
             if not scan_success:
                 success = False
         except Exception as e:
-            utils.pyprint(
+            logger.log(
+                logging.WARNING,
                 f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
-                timestamps=timestamps,
             )
         if throttle_time:
             sleep(throttle_time)
 
     if count > 0:
-        utils.pyprint(f"Successfully scanned {count} AIPs", timestamps=timestamps)
-
+        logger.log(logging.WARNING, f"Successfully scanned {count} AIPs")
     return success
 
 
-def main():
+def main(arguements=None):
     success = 0
 
     try:
-        args = parse_arguments()
+        args = parse_arguments(arguements)
     except ArgumentError as e:
         return e
 
@@ -279,6 +278,25 @@ def main():
         return e
 
     session = Session()
+
+    logger = logging.getLogger(__name__)
+
+    # create console handler which logs stderr messages
+    stderr_handler = logging.StreamHandler(stream=sys.stderr)
+
+    # create formatter and add it to the handlers
+    if args.timestamps:
+        format_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
+        message_format = logging.Formatter(
+            "[%(asctime)s] %(message)s",
+            datefmt=format_time,
+        )
+    else:
+        message_format = logging.Formatter("%(message)s")
+    stderr_handler.setFormatter(message_format)
+
+    # add the handlers to the logger
+    logger.addHandler(stderr_handler)
 
     status = False
 
@@ -296,6 +314,7 @@ def main():
                 args.ss_user,
                 args.ss_key,
                 session,
+                logger,
                 report_url=report_url,
                 report_auth=auth,
                 throttle_time=args.throttle,
@@ -310,6 +329,7 @@ def main():
                 args.ss_user,
                 args.ss_key,
                 session,
+                logger,
                 report_url=report_url,
                 report_auth=auth,
                 session_id=session_id,
@@ -339,4 +359,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

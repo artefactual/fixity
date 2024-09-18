@@ -25,7 +25,7 @@ def validate_arguments(args):
         raise ArgumentError("An AIP UUID must be specified when scanning a single AIP")
 
 
-def parse_arguments(argument):
+def parse_arguments(arguments):
     parser = ArgumentParser()
     parser.add_argument("command", choices=["scan", "scanall"], help="Command to run.")
     parser.add_argument("aip", nargs="?", help="If 'scan', UUID of the AIP to scan")
@@ -48,7 +48,7 @@ def parse_arguments(argument):
         action="store_true",
         help="Add a timestamp to the beginning of each line of output.",
     )
-    args = parser.parse_args(argument)
+    args = parser.parse_args(arguments)
 
     validate_arguments(args)
     return args
@@ -108,7 +108,6 @@ def scan(
     report_auth=(),
     session_id=None,
     force_local=False,
-    timestamps=False,
 ):
     """
     Instruct the storage service to scan a single AIP.
@@ -125,7 +124,6 @@ def scan(
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param session_id: Identifier for this session, allowing every scan from one run to be identified.
     :param bool force_local: If True, will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
-    :param bool timestamps: If True, will add a timestamp to the beginning of each line of output.
     """
     # Ensure the storage service knows about this AIP first;
     # get_single_aip() will raise an exception if the storage service
@@ -209,7 +207,6 @@ def scanall(
     report_auth=(),
     throttle_time=0,
     force_local=False,
-    timestamps=False,
 ):
     """
     Run a fixity scan on every AIP in a storage service instance.
@@ -221,7 +218,6 @@ def scanall(
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param int throttle_time: Time to wait between scans.
     :param bool force_local: If True, will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
-    :param bool timestamps: If True, will add a timestamp to the beginning of each line of output.
     """
     success = True
 
@@ -247,7 +243,6 @@ def scanall(
                 report_auth=report_auth,
                 session_id=session_id,
                 force_local=force_local,
-                timestamps=timestamps,
             )
             if not scan_success:
                 success = False
@@ -264,11 +259,38 @@ def scanall(
     return success
 
 
-def main(arguements=None):
+class UTCFormatter(logging.Formatter):
+    def formatTime(self, record, datefmt=None):
+        return datetime.fromtimestamp(record.created, tz=timezone.utc).strftime(
+            "%Y-%m-%d %H:%M:%S %Z"
+        )
+
+
+def get_logger() -> logging.Logger:
+    logger = logging.getLogger("fixity")
+    logger.setLevel(logging.WARNING)
+    return logger
+
+
+def get_handler(stream, timestamps):
+    stderr_handler = logging.StreamHandler(stream=stream)
+    if timestamps:
+        message_format = UTCFormatter("[%(asctime)s] %(message)s")
+    else:
+        message_format = logging.Formatter("%(message)s")
+    stderr_handler.setFormatter(message_format)
+    return stderr_handler
+
+
+def main(arguments=None, logger=None, stream=None):
+    if logger is None:
+        logger = get_logger()
+    if stream is None:
+        stream = sys.stderr
     success = 0
 
     try:
-        args = parse_arguments(arguements)
+        args = parse_arguments(arguments)
     except ArgumentError as e:
         return e
 
@@ -277,26 +299,10 @@ def main(arguements=None):
     except ArgumentError as e:
         return e
 
-    session = Session()
+    stderr_handler = get_handler(stream=stream, timestamps=args.timestamps)
 
-    logger = logging.getLogger(__name__)
-
-    # create console handler which logs stderr messages
-    stderr_handler = logging.StreamHandler(stream=sys.stderr)
-
-    # create formatter and add it to the handlers
-    if args.timestamps:
-        format_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
-        message_format = logging.Formatter(
-            "[%(asctime)s] %(message)s",
-            datefmt=format_time,
-        )
-    else:
-        message_format = logging.Formatter("%(message)s")
-    stderr_handler.setFormatter(message_format)
-
-    # add the handlers to the logger
     logger.addHandler(stderr_handler)
+    session = Session()
 
     status = False
 
@@ -319,7 +325,6 @@ def main(arguements=None):
                 report_auth=auth,
                 throttle_time=args.throttle,
                 force_local=args.force_local,
-                timestamps=args.timestamps,
             )
         elif args.command == "scan":
             session_id = str(uuid4())
@@ -334,7 +339,6 @@ def main(arguements=None):
                 report_auth=auth,
                 session_id=session_id,
                 force_local=args.force_local,
-                timestamps=args.timestamps,
             )
         else:
             return Exception(f'Error: "{args.command}" is not a valid command.')
@@ -354,9 +358,8 @@ def main(arguements=None):
         success = 1
     else:
         success = status
-
     return success
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main(sys.argv[1:], get_logger(), sys.stderr))

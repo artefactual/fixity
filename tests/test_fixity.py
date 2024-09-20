@@ -20,7 +20,6 @@ STORAGE_SERVICE_USER = "test"
 STORAGE_SERVICE_KEY = "test"
 REPORT_URL = "http://localhost:8003/"
 
-
 mock_scan_aip = mock.Mock(
     **{
         "status_code": 200,
@@ -87,25 +86,28 @@ def test_scan(_get, mock_check_fixity):
     ]
 
 
+@mock.patch("time.time")
 @mock.patch("requests.get")
 @mock.patch.object(fixity, "Session", lambda: SESSION)
-def test_scan_if_timestamps_argument_is_passed(_get, monkeypatch, mock_check_fixity):
+def test_scan_if_timestamps_argument_is_passed(
+    _get, time, monkeypatch, mock_check_fixity
+):
     _get.side_effect = mock_check_fixity
     monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
     monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
     monkeypatch.setenv("STORAGE_SERVICE_KEY", STORAGE_SERVICE_KEY)
-    aip_id = str(uuid.uuid4())
+    aip_id = uuid.uuid4()
+    timestamp = 1514775600
+    time.return_value = timestamp
     stream = io.StringIO()
     logger = fixity.get_logger()
 
-    timestamp = 1514775600
-
-    with mock.patch("time.time", return_value=timestamp):
-        response = fixity.main(
-            ["scan", aip_id, "--timestamps"], logger=logger, stream=stream
-        )
+    response = fixity.main(
+        ["scan", str(aip_id), "--timestamps"], logger=logger, stream=stream
+    )
 
     assert response == 0
+
     _assert_stream_content_matches(
         stream,
         [f"[2018-01-01 03:00:00 UTC] Fixity scan succeeded for AIP: {aip_id}"],

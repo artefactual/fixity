@@ -25,7 +25,7 @@ def validate_arguments(args):
         raise ArgumentError("An AIP UUID must be specified when scanning a single AIP")
 
 
-def parse_arguments(arguments):
+def parse_arguments(argv):
     parser = ArgumentParser()
     parser.add_argument("command", choices=["scan", "scanall"], help="Command to run.")
     parser.add_argument("aip", nargs="?", help="If 'scan', UUID of the AIP to scan")
@@ -48,7 +48,7 @@ def parse_arguments(arguments):
         action="store_true",
         help="Add a timestamp to the beginning of each line of output.",
     )
-    args = parser.parse_args(arguments)
+    args = parser.parse_args(argv)
 
     validate_arguments(args)
     return args
@@ -120,11 +120,13 @@ def scan(
     :param str ss_url: The base URL to a storage service installation.
     :param str ss_user: Storage service user to authenticate as
     :param str ss_key: API key of the storage service user
+    :param Logger logger: Logger to print output.
     :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be     transmitted.
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param session_id: Identifier for this session, allowing every scan from one run to be identified.
     :param bool force_local: If True, will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
     """
+
     # Ensure the storage service knows about this AIP first;
     # get_single_aip() will raise an exception if the storage service
     # does not have an AIP with that UUID, or otherwise errors out
@@ -214,6 +216,7 @@ def scanall(
     :param str ss_url: The base URL to a storage service installation.
     :param str ss_user: Storage service user to authenticate as
     :param str ss_key: API key of the storage service user
+    :param Logger logger: Logger to print output.
     :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be transmitted.
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param int throttle_time: Time to wait between scans.
@@ -282,15 +285,16 @@ def get_handler(stream, timestamps):
     return stderr_handler
 
 
-def main(arguments=None, logger=None, stream=None):
+def main(argv=None, logger=None, stream=None):
     if logger is None:
         logger = get_logger()
     if stream is None:
         stream = sys.stderr
+
     success = 0
 
     try:
-        args = parse_arguments(arguments)
+        args = parse_arguments(argv)
     except ArgumentError as e:
         return e
 
@@ -299,9 +303,7 @@ def main(arguments=None, logger=None, stream=None):
     except ArgumentError as e:
         return e
 
-    stderr_handler = get_handler(stream=stream, timestamps=args.timestamps)
-
-    logger.addHandler(stderr_handler)
+    logger.addHandler(get_handler(stream=stream, timestamps=args.timestamps))
     session = Session()
 
     status = False
@@ -358,6 +360,7 @@ def main(arguments=None, logger=None, stream=None):
         success = 1
     else:
         success = status
+
     return success
 
 

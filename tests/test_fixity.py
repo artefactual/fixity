@@ -1,6 +1,5 @@
 import io
 import json
-import time
 import uuid
 from datetime import datetime
 from datetime import timezone
@@ -98,9 +97,8 @@ def test_scan_if_timestamps_argument_is_passed(_get, monkeypatch, mock_check_fix
     logger = fixity.get_logger()
 
     timestamp = 1514775600
-    expected_time = time.localtime(timestamp)
 
-    with mock.patch.object(time, "localtime", return_value=expected_time):
+    with mock.patch("time.time", return_value=timestamp):
         response = fixity.main(
             ["scan", aip_id, "--timestamps"], logger=logger, stream=stream
         )

@@ -1,5 +1,5 @@
+import io
 import json
-import sys
 import uuid
 from datetime import datetime
 from datetime import timezone
@@ -10,6 +10,7 @@ import requests
 
 from fixity import fixity
 from fixity import reporting
+from fixity.fixity import get_handler
 from fixity.models import Report
 from fixity.models import Session
 
@@ -47,10 +48,18 @@ def mock_check_fixity():
     ]
 
 
+def _assert_stream_content_matches(stream, expected):
+    stream.seek(0)
+    assert [line.strip() for line in stream.readlines()] == expected
+
+
 @mock.patch("requests.get")
 def test_scan(_get, mock_check_fixity):
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
+    stream = io.StringIO()
+    logger = fixity.get_logger()
+    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
     response = fixity.scan(
         aip=str(aip_id),
@@ -58,9 +67,12 @@ def test_scan(_get, mock_check_fixity):
         ss_user=STORAGE_SERVICE_USER,
         ss_key=STORAGE_SERVICE_KEY,
         session=SESSION,
+        logger=logger,
     )
 
     assert response is True
+
+    _assert_stream_content_matches(stream, [f"Fixity scan succeeded for AIP: {aip_id}"])
 
     assert _get.mock_calls == [
         mock.call(
@@ -74,31 +86,33 @@ def test_scan(_get, mock_check_fixity):
     ]
 
 
-@mock.patch("fixity.utils.utcnow")
+@mock.patch("time.time")
 @mock.patch("requests.get")
-def test_scan_if_timestamps_argument_is_passed(_get, utcnow, mock_check_fixity, capsys):
+@mock.patch.object(fixity, "Session", lambda: SESSION)
+def test_scan_if_timestamps_argument_is_passed(
+    _get, time, monkeypatch, mock_check_fixity
+):
     _get.side_effect = mock_check_fixity
+    monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
+    monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
+    monkeypatch.setenv("STORAGE_SERVICE_KEY", STORAGE_SERVICE_KEY)
     aip_id = uuid.uuid4()
     timestamp = 1514775600
-    utcnow.return_value = datetime.fromtimestamp(timestamp, timezone.utc)
+    time.return_value = timestamp
+    stream = io.StringIO()
+    logger = fixity.get_logger()
 
-    response = fixity.scan(
-        aip=str(aip_id),
-        ss_url=STORAGE_SERVICE_URL,
-        ss_user=STORAGE_SERVICE_USER,
-        ss_key=STORAGE_SERVICE_KEY,
-        session=SESSION,
-        timestamps=True,
+    response = fixity.main(
+        ["scan", str(aip_id), "--timestamps"], logger=logger, stream=stream
     )
 
-    assert response is True
+    assert response == 0
 
-    captured = capsys.readouterr()
-    assert captured.out == ""
-    assert (
-        captured.err.strip()
-        == f"[2018-01-01 03:00:00 UTC] Fixity scan succeeded for AIP: {aip_id}"
+    _assert_stream_content_matches(
+        stream,
+        [f"[2018-01-01 03:00:00 UTC] Fixity scan succeeded for AIP: {aip_id}"],
     )
+
     assert _get.mock_calls == [
         mock.call(
             f"{STORAGE_SERVICE_URL}api/v2/file/{aip_id}/",
@@ -125,6 +139,9 @@ def test_scan_if_report_url_exists(_post, _get, utcnow, mock_check_fixity):
     start_time = 1514775600
     utcnow.return_value = datetime.fromtimestamp(start_time, timezone.utc)
     aip_id = uuid.uuid4()
+    stream = io.StringIO()
+    logger = fixity.get_logger()
+    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
     response = fixity.scan(
         aip=str(aip_id),
@@ -132,6 +149,7 @@ def test_scan_if_report_url_exists(_post, _get, utcnow, mock_check_fixity):
         ss_user=STORAGE_SERVICE_USER,
         ss_key=STORAGE_SERVICE_KEY,
         session=SESSION,
+        logger=logger,
         report_url=REPORT_URL,
     )
 
@@ -190,11 +208,12 @@ def test_scan_if_report_url_exists(_post, _get, utcnow, mock_check_fixity):
         ),
     ],
 )
-def test_scan_handles_exceptions_if_report_url_exists(
-    _post, _get, capsys, mock_check_fixity
-):
+def test_scan_handles_exceptions_if_report_url_exists(_post, _get, mock_check_fixity):
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
+    stream = io.StringIO()
+    logger = fixity.get_logger()
+    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
     response = fixity.scan(
         aip=str(aip_id),
@@ -202,19 +221,19 @@ def test_scan_handles_exceptions_if_report_url_exists(
         ss_user=STORAGE_SERVICE_USER,
         ss_key=STORAGE_SERVICE_KEY,
         session=SESSION,
+        logger=logger,
         report_url=REPORT_URL,
     )
 
     assert response is True
 
-    captured = capsys.readouterr()
-    assert captured.out.strip() == ""
-    assert captured.err.strip() == "\n".join(
+    _assert_stream_content_matches(
+        stream,
         [
             f"Unable to POST pre-scan report to {REPORT_URL}",
             f"Fixity scan succeeded for AIP: {aip_id}",
             f"Unable to POST report for AIP {aip_id} to remote service",
-        ]
+        ],
     )
 
 
@@ -237,8 +256,11 @@ def test_scan_handles_exceptions_if_report_url_exists(
         ),
     ],
 )
-def test_scan_handles_exceptions(_get, capsys):
+def test_scan_handles_exceptions(_get):
     aip_id = uuid.uuid4()
+    stream = io.StringIO()
+    logger = fixity.get_logger()
+    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
     response = fixity.scan(
         aip=str(aip_id),
@@ -246,15 +268,16 @@ def test_scan_handles_exceptions(_get, capsys):
         ss_user=STORAGE_SERVICE_USER,
         ss_key=STORAGE_SERVICE_KEY,
         session=SESSION,
+        logger=logger,
     )
 
     assert response is None
 
-    captured = capsys.readouterr()
-    assert captured.out.strip() == ""
-    assert (
-        f'Storage service at "{STORAGE_SERVICE_URL}" encountered an internal error while scanning AIP {aip_id}\n'
-        == captured.err
+    _assert_stream_content_matches(
+        stream,
+        [
+            f'Storage service at "{STORAGE_SERVICE_URL}" encountered an internal error while scanning AIP {aip_id}'
+        ],
     )
 
 
@@ -279,6 +302,9 @@ def test_scan_handles_exceptions(_get, capsys):
 )
 def test_scan_handles_exceptions_if_no_scan_attempted(_get):
     aip_id = uuid.uuid4()
+    stream = io.StringIO()
+    logger = fixity.get_logger()
+    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
     response = fixity.scan(
         aip=str(aip_id),
@@ -286,9 +312,11 @@ def test_scan_handles_exceptions_if_no_scan_attempted(_get):
         ss_user=STORAGE_SERVICE_USER,
         ss_key=STORAGE_SERVICE_KEY,
         session=SESSION,
+        logger=logger,
     )
 
     assert response is None
+
     assert Report(aip_id=aip_id).success is None
 
 
@@ -316,7 +344,7 @@ def test_scan_message(status, error_message):
 @mock.patch(
     "requests.get",
 )
-def test_scanall(_get, capsys, mock_check_fixity):
+def test_scanall(_get, mock_check_fixity):
     aip1_uuid = "41e12f76-354e-402d-85ee-f812cb72f6e6"
     aip2_uuid = "807ecfb7-08b1-4435-87ec-5c6bfbe62225"
     _get.side_effect = [
@@ -344,31 +372,35 @@ def test_scanall(_get, capsys, mock_check_fixity):
         *mock_check_fixity,
         *mock_check_fixity,
     ]
+    stream = io.StringIO()
+    logger = fixity.get_logger()
+    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
     response = fixity.scanall(
         ss_url=STORAGE_SERVICE_URL,
         ss_user=STORAGE_SERVICE_USER,
         ss_key=STORAGE_SERVICE_KEY,
         session=SESSION,
+        logger=logger,
     )
 
     assert response is True
 
-    captured = capsys.readouterr()
-    assert captured.out.strip() == ""
-    expected_output = "\n".join(
+    _assert_stream_content_matches(
+        stream,
         [
             f"Fixity scan succeeded for AIP: {aip1_uuid}",
             f"Fixity scan succeeded for AIP: {aip2_uuid}",
             "Successfully scanned 2 AIPs",
-        ]
+        ],
     )
-    assert captured.err.strip() == expected_output
 
 
-@mock.patch(
-    "requests.get",
-    side_effect=[
+@mock.patch("requests.get")
+def test_scanall_handles_exceptions(_get):
+    aip_id1 = str(uuid.uuid4())
+    aip_id2 = str(uuid.uuid4())
+    _get.side_effect = [
         mock.Mock(
             **{
                 "status_code": 200,
@@ -378,12 +410,12 @@ def test_scanall(_get, capsys, mock_check_fixity):
                         {
                             "package_type": "AIP",
                             "status": "UPLOADED",
-                            "uuid": "77adb748-8d9c-47ec-b593-53465749ce0e",
+                            "uuid": f"{aip_id1}",
                         },
                         {
                             "package_type": "AIP",
                             "status": "UPLOADED",
-                            "uuid": "32f62f8b-ecfd-419e-a3e9-911ec23d0573",
+                            "uuid": f"{aip_id2}",
                         },
                     ],
                 },
@@ -408,52 +440,56 @@ def test_scanall(_get, capsys, mock_check_fixity):
             side_effect=Exception,
         ),
         mock_scan_aip,
-    ],
-)
-def test_scanall_handles_exceptions(_get, capsys):
+    ]
+
+    stream = io.StringIO()
+    logger = fixity.get_logger()
+    logger.addHandler(get_handler(stream=stream, timestamps=False))
+
     response = fixity.scanall(
         ss_url=STORAGE_SERVICE_URL,
         ss_user=STORAGE_SERVICE_USER,
         ss_key=STORAGE_SERVICE_KEY,
         session=SESSION,
+        logger=logger,
     )
 
     assert response is False
 
-    captured = capsys.readouterr()
-
-    assert captured.err.strip() == "\n".join(
+    _assert_stream_content_matches(
+        stream,
         [
-            "Internal error encountered while scanning AIP 77adb748-8d9c-47ec-b593-53465749ce0e (StorageServiceError)",
-            f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP 32f62f8b-ecfd-419e-a3e9-911ec23d0573',
+            f"Internal error encountered while scanning AIP {aip_id1} (StorageServiceError)",
+            f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP {aip_id2}',
             "Successfully scanned 2 AIPs",
-        ]
+        ],
     )
 
 
 @mock.patch("requests.get")
 @mock.patch.object(fixity, "Session", lambda: SESSION)
-def test_main_scan(_get, monkeypatch, mock_check_fixity, capsys):
+def test_main_scan(_get, monkeypatch, mock_check_fixity):
     _get.side_effect = mock_check_fixity
     monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
     monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
     monkeypatch.setenv("STORAGE_SERVICE_KEY", STORAGE_SERVICE_KEY)
     aip_id = str(uuid.uuid4())
-    sys.argv = ["fixity.py", "scan", aip_id]
+    stream = io.StringIO()
+    logger = fixity.get_logger()
+    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
-    result = fixity.main()
+    result = fixity.main(["scan", aip_id])
 
     assert result == 0
 
-    captured = capsys.readouterr()
-    assert captured.out.strip() == ""
-    assert captured.err.strip() == f"Fixity scan succeeded for AIP: {aip_id}"
+    _assert_stream_content_matches(stream, [f"Fixity scan succeeded for AIP: {aip_id}"])
 
 
 @mock.patch("requests.get")
 @mock.patch.object(fixity, "Session", lambda: SESSION)
-def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch, capsys):
-    aip_id = str(uuid.uuid4())
+def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch):
+    aip_id1 = str(uuid.uuid4())
+    aip_id2 = str(uuid.uuid4())
     _get.side_effect = [
         mock.Mock(
             **{
@@ -464,12 +500,12 @@ def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch, capsys):
                         {
                             "package_type": "AIP",
                             "status": "UPLOADED",
-                            "uuid": f"{aip_id}",
+                            "uuid": f"{aip_id1}",
                         },
                         {
                             "package_type": "AIP",
                             "status": "UPLOADED",
-                            "uuid": "32f62f8b-ecfd-419e-a3e9-911ec23d0573",
+                            "uuid": f"{aip_id2}",
                         },
                     ],
                 },
@@ -499,18 +535,19 @@ def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch, capsys):
     monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
     monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
     monkeypatch.setenv("STORAGE_SERVICE_KEY", STORAGE_SERVICE_KEY)
-    sys.argv = ["fixity.py", "scanall"]
+    stream = io.StringIO()
+    logger = fixity.get_logger()
+    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
-    result = fixity.main()
+    result = fixity.main(["scanall"])
 
     assert result == 1
 
-    captured = capsys.readouterr()
-    assert captured.out.strip() == ""
-    assert captured.err.strip() == "\n".join(
+    _assert_stream_content_matches(
+        stream,
         [
-            f"Internal error encountered while scanning AIP {aip_id} (StorageServiceError)",
-            f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP 32f62f8b-ecfd-419e-a3e9-911ec23d0573',
+            f"Internal error encountered while scanning AIP {aip_id1} (StorageServiceError)",
+            f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP {aip_id2}',
             "Successfully scanned 2 AIPs",
-        ]
+        ],
     )

@@ -1,8 +1,11 @@
 import json
+import logging
 import os
 import sys
 import traceback
 from argparse import ArgumentParser
+from datetime import datetime
+from datetime import timezone
 from time import sleep
 from uuid import uuid4
 
@@ -22,7 +25,7 @@ def validate_arguments(args):
         raise ArgumentError("An AIP UUID must be specified when scanning a single AIP")
 
 
-def parse_arguments():
+def parse_arguments(argv):
     parser = ArgumentParser()
     parser.add_argument("command", choices=["scan", "scanall"], help="Command to run.")
     parser.add_argument("aip", nargs="?", help="If 'scan', UUID of the AIP to scan")
@@ -45,7 +48,7 @@ def parse_arguments():
         action="store_true",
         help="Add a timestamp to the beginning of each line of output.",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     validate_arguments(args)
     return args
@@ -100,11 +103,11 @@ def scan(
     ss_user,
     ss_key,
     session,
+    logger,
     report_url=None,
     report_auth=(),
     session_id=None,
     force_local=False,
-    timestamps=False,
 ):
     """
     Instruct the storage service to scan a single AIP.
@@ -117,11 +120,11 @@ def scan(
     :param str ss_url: The base URL to a storage service installation.
     :param str ss_user: Storage service user to authenticate as
     :param str ss_key: API key of the storage service user
+    :param Logger logger: Logger to print output.
     :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be     transmitted.
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param session_id: Identifier for this session, allowing every scan from one run to be identified.
     :param bool force_local: If True, will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
-    :param bool timestamps: If True, will add a timestamp to the beginning of each line of output.
     """
 
     # Ensure the storage service knows about this AIP first;
@@ -142,10 +145,7 @@ def scan(
                 session_id=session_id,
             )
     except reporting.ReportServiceException:
-        utils.pyprint(
-            f"Unable to POST pre-scan report to {report_url}", timestamps=timestamps
-        )
-
+        logger.log(logging.WARNING, f"Unable to POST pre-scan report to {report_url}")
     try:
         status, report = storage_service.scan_aip(
             aip,
@@ -157,11 +157,10 @@ def scan(
             force_local=force_local,
         )
         report_data = json.loads(report.report)
-        utils.pyprint(
-            scan_message(aip, status, report_data["message"]), timestamps=timestamps
-        )
+        logger.log(logging.WARNING, scan_message(aip, status, report_data["message"]))
     except Exception as e:
-        utils.pyprint(str(e), timestamps=timestamps)
+        logger.log(logging.WARNING, str(e))
+
         status = None
         if hasattr(e, "report") and e.report:
             report = e.report
@@ -190,11 +189,10 @@ def scan(
                 aip, report, report_url, report_auth=report_auth, session_id=session_id
             )
         except reporting.ReportServiceException:
-            utils.pyprint(
+            logger.log(
+                logging.WARNING,
                 f"Unable to POST report for AIP {aip} to remote service",
-                timestamps=timestamps,
             )
-
     if report:
         session.add(report)
 
@@ -206,11 +204,11 @@ def scanall(
     ss_user,
     ss_key,
     session,
+    logger,
     report_url=None,
     report_auth=(),
     throttle_time=0,
     force_local=False,
-    timestamps=False,
 ):
     """
     Run a fixity scan on every AIP in a storage service instance.
@@ -218,11 +216,11 @@ def scanall(
     :param str ss_url: The base URL to a storage service installation.
     :param str ss_user: Storage service user to authenticate as
     :param str ss_key: API key of the storage service user
+    :param Logger logger: Logger to print output.
     :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be transmitted.
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param int throttle_time: Time to wait between scans.
     :param bool force_local: If True, will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).
-    :param bool timestamps: If True, will add a timestamp to the beginning of each line of output.
     """
     success = True
 
@@ -243,33 +241,60 @@ def scanall(
                 ss_user,
                 ss_key,
                 session,
+                logger,
                 report_url=report_url,
                 report_auth=report_auth,
                 session_id=session_id,
                 force_local=force_local,
-                timestamps=timestamps,
             )
             if not scan_success:
                 success = False
         except Exception as e:
-            utils.pyprint(
+            logger.log(
+                logging.WARNING,
                 f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
-                timestamps=timestamps,
             )
         if throttle_time:
             sleep(throttle_time)
 
     if count > 0:
-        utils.pyprint(f"Successfully scanned {count} AIPs", timestamps=timestamps)
-
+        logger.log(logging.WARNING, f"Successfully scanned {count} AIPs")
     return success
 
 
-def main():
+class UTCFormatter(logging.Formatter):
+    def formatTime(self, record, datefmt=None):
+        return datetime.fromtimestamp(record.created, tz=timezone.utc).strftime(
+            "%Y-%m-%d %H:%M:%S %Z"
+        )
+
+
+def get_logger() -> logging.Logger:
+    logger = logging.getLogger("fixity")
+    logger.setLevel(logging.WARNING)
+    return logger
+
+
+def get_handler(stream, timestamps):
+    stderr_handler = logging.StreamHandler(stream=stream)
+    if timestamps:
+        message_format = UTCFormatter("[%(asctime)s] %(message)s")
+    else:
+        message_format = logging.Formatter("%(message)s")
+    stderr_handler.setFormatter(message_format)
+    return stderr_handler
+
+
+def main(argv=None, logger=None, stream=None):
+    if logger is None:
+        logger = get_logger()
+    if stream is None:
+        stream = sys.stderr
+
     success = 0
 
     try:
-        args = parse_arguments()
+        args = parse_arguments(argv)
     except ArgumentError as e:
         return e
 
@@ -278,6 +303,7 @@ def main():
     except ArgumentError as e:
         return e
 
+    logger.addHandler(get_handler(stream=stream, timestamps=args.timestamps))
     session = Session()
 
     status = False
@@ -296,11 +322,11 @@ def main():
                 args.ss_user,
                 args.ss_key,
                 session,
+                logger,
                 report_url=report_url,
                 report_auth=auth,
                 throttle_time=args.throttle,
                 force_local=args.force_local,
-                timestamps=args.timestamps,
             )
         elif args.command == "scan":
             session_id = str(uuid4())
@@ -310,11 +336,11 @@ def main():
                 args.ss_user,
                 args.ss_key,
                 session,
+                logger,
                 report_url=report_url,
                 report_auth=auth,
                 session_id=session_id,
                 force_local=args.force_local,
-                timestamps=args.timestamps,
             )
         else:
             return Exception(f'Error: "{args.command}" is not a valid command.')
@@ -339,4 +365,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:], get_logger(), sys.stderr))

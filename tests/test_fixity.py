@@ -49,6 +49,11 @@ def mock_check_fixity():
     ]
 
 
+def _assert_stream_content_matches(stream, expected):
+    stream.seek(0)
+    assert [line.strip() for line in stream.readlines()] == expected
+
+
 @mock.patch("requests.get")
 def test_scan(_get, mock_check_fixity):
     _get.side_effect = mock_check_fixity
@@ -68,10 +73,7 @@ def test_scan(_get, mock_check_fixity):
 
     assert response is True
 
-    stream.seek(0)
-    assert [line.strip() for line in stream.readlines()] == [
-        f"Fixity scan succeeded for AIP: {aip_id}"
-    ]
+    _assert_stream_content_matches(stream, [f"Fixity scan succeeded for AIP: {aip_id}"])
 
     assert _get.mock_calls == [
         mock.call(
@@ -103,11 +105,11 @@ def test_scan_if_timestamps_argument_is_passed(_get, monkeypatch, mock_check_fix
             ["scan", aip_id, "--timestamps"], logger=logger, stream=stream
         )
 
-        assert response == 0
-        stream.seek(0)
-        assert [line.strip() for line in stream.readlines()] == [
-            f"[2018-01-01 03:00:00 UTC] Fixity scan succeeded for AIP: {aip_id}"
-        ]
+    assert response == 0
+    _assert_stream_content_matches(
+        stream,
+        [f"[2018-01-01 03:00:00 UTC] Fixity scan succeeded for AIP: {aip_id}"],
+    )
 
     assert _get.mock_calls == [
         mock.call(
@@ -223,12 +225,14 @@ def test_scan_handles_exceptions_if_report_url_exists(_post, _get, mock_check_fi
 
     assert response is True
 
-    stream.seek(0)
-    assert [line.strip() for line in stream.readlines()] == [
-        f"Unable to POST pre-scan report to {REPORT_URL}",
-        f"Fixity scan succeeded for AIP: {aip_id}",
-        f"Unable to POST report for AIP {aip_id} to remote service",
-    ]
+    _assert_stream_content_matches(
+        stream,
+        [
+            f"Unable to POST pre-scan report to {REPORT_URL}",
+            f"Fixity scan succeeded for AIP: {aip_id}",
+            f"Unable to POST report for AIP {aip_id} to remote service",
+        ],
+    )
 
 
 @mock.patch(
@@ -267,10 +271,12 @@ def test_scan_handles_exceptions(_get):
 
     assert response is None
 
-    stream.seek(0)
-    assert [line.strip() for line in stream.readlines()] == [
-        f'Storage service at "{STORAGE_SERVICE_URL}" encountered an internal error while scanning AIP {aip_id}'
-    ]
+    _assert_stream_content_matches(
+        stream,
+        [
+            f'Storage service at "{STORAGE_SERVICE_URL}" encountered an internal error while scanning AIP {aip_id}'
+        ],
+    )
 
 
 @mock.patch(
@@ -378,13 +384,14 @@ def test_scanall(_get, mock_check_fixity):
 
     assert response is True
 
-    stream.seek(0)
-    expected_output = [
-        f"Fixity scan succeeded for AIP: {aip1_uuid}",
-        f"Fixity scan succeeded for AIP: {aip2_uuid}",
-        "Successfully scanned 2 AIPs",
-    ]
-    assert [line.strip() for line in stream.readlines()] == expected_output
+    _assert_stream_content_matches(
+        stream,
+        [
+            f"Fixity scan succeeded for AIP: {aip1_uuid}",
+            f"Fixity scan succeeded for AIP: {aip2_uuid}",
+            "Successfully scanned 2 AIPs",
+        ],
+    )
 
 
 @mock.patch("requests.get")
@@ -447,12 +454,14 @@ def test_scanall_handles_exceptions(_get):
 
     assert response is False
 
-    stream.seek(0)
-    assert [line.strip() for line in stream.readlines()] == [
-        f"Internal error encountered while scanning AIP {aip_id1} (StorageServiceError)",
-        f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP {aip_id2}',
-        "Successfully scanned 2 AIPs",
-    ]
+    _assert_stream_content_matches(
+        stream,
+        [
+            f"Internal error encountered while scanning AIP {aip_id1} (StorageServiceError)",
+            f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP {aip_id2}',
+            "Successfully scanned 2 AIPs",
+        ],
+    )
 
 
 @mock.patch("requests.get")
@@ -471,10 +480,7 @@ def test_main_scan(_get, monkeypatch, mock_check_fixity):
 
     assert result == 0
 
-    stream.seek(0)
-    assert [line.strip() for line in stream.readlines()] == [
-        f"Fixity scan succeeded for AIP: {aip_id}"
-    ]
+    _assert_stream_content_matches(stream, [f"Fixity scan succeeded for AIP: {aip_id}"])
 
 
 @mock.patch("requests.get")
@@ -535,9 +541,11 @@ def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch):
 
     assert result == 1
 
-    stream.seek(0)
-    assert [line.strip() for line in stream.readlines()] == [
-        f"Internal error encountered while scanning AIP {aip_id1} (StorageServiceError)",
-        f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP {aip_id2}',
-        "Successfully scanned 2 AIPs",
-    ]
+    _assert_stream_content_matches(
+        stream,
+        [
+            f"Internal error encountered while scanning AIP {aip_id1} (StorageServiceError)",
+            f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP {aip_id2}',
+            "Successfully scanned 2 AIPs",
+        ],
+    )

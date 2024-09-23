@@ -15,6 +15,8 @@ from . import utils
 from .models import Report
 from .models import Session
 
+LOG_LEVEL = logging.WARNING
+
 
 class ArgumentError(Exception):
     pass
@@ -47,6 +49,11 @@ def parse_arguments(argv):
         "--timestamps",
         action="store_true",
         help="Add a timestamp to the beginning of each line of output.",
+    )
+    parser.add_argument(
+        "--sort",
+        action="store_true",
+        help="Sort the AIPs based on result of fixity check success or failure.",
     )
     args = parser.parse_args(argv)
 
@@ -145,7 +152,7 @@ def scan(
                 session_id=session_id,
             )
     except reporting.ReportServiceException:
-        logger.log(logging.WARNING, f"Unable to POST pre-scan report to {report_url}")
+        logger.log(LOG_LEVEL, f"Unable to POST pre-scan report to {report_url}")
     try:
         status, report = storage_service.scan_aip(
             aip,
@@ -157,9 +164,9 @@ def scan(
             force_local=force_local,
         )
         report_data = json.loads(report.report)
-        logger.log(logging.WARNING, scan_message(aip, status, report_data["message"]))
+        logger.log(LOG_LEVEL, scan_message(aip, status, report_data["message"]))
     except Exception as e:
-        logger.log(logging.WARNING, str(e))
+        logger.log(LOG_LEVEL, str(e))
 
         status = None
         if hasattr(e, "report") and e.report:
@@ -190,7 +197,7 @@ def scan(
             )
         except reporting.ReportServiceException:
             logger.log(
-                logging.WARNING,
+                LOG_LEVEL,
                 f"Unable to POST report for AIP {aip} to remote service",
             )
     if report:
@@ -251,14 +258,14 @@ def scanall(
                 success = False
         except Exception as e:
             logger.log(
-                logging.WARNING,
+                LOG_LEVEL,
                 f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
             )
         if throttle_time:
             sleep(throttle_time)
 
     if count > 0:
-        logger.log(logging.WARNING, f"Successfully scanned {count} AIPs")
+        logger.log(LOG_LEVEL, f"Successfully scanned {count} AIPs")
     return success
 
 
@@ -271,7 +278,7 @@ class UTCFormatter(logging.Formatter):
 
 def get_logger() -> logging.Logger:
     logger = logging.getLogger("fixity")
-    logger.setLevel(logging.WARNING)
+    logger.setLevel(LOG_LEVEL)
     return logger
 
 

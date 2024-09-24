@@ -1,3 +1,4 @@
+import io
 import json
 import logging
 import os
@@ -285,14 +286,23 @@ def get_logger() -> logging.Logger:
     return logger
 
 
-def get_handler(stream, timestamps):
-    stderr_handler = logging.StreamHandler(stream=stream)
+def filter_maker(level):
+    def filter(record):
+        return record.levelno == level
+
+    return filter
+
+
+def get_handler(stream, timestamps, log_level=None):
+    handler = logging.StreamHandler(stream=stream)
+    if log_level is not None:
+        handler.addFilter(filter_maker(log_level))
     if timestamps:
         message_format = UTCFormatter("[%(asctime)s] %(message)s")
     else:
         message_format = logging.Formatter("%(message)s")
-    stderr_handler.setFormatter(message_format)
-    return stderr_handler
+    handler.setFormatter(message_format)
+    return handler
 
 
 def main(argv=None, logger=None, stream=None):
@@ -313,7 +323,12 @@ def main(argv=None, logger=None, stream=None):
     except ArgumentError as e:
         return e
 
-    logger.addHandler(get_handler(stream=stream, timestamps=args.timestamps))
+    success_stream = io.StringIO()
+    error_stream = io.StringIO()
+    all_stream = io.StringIO()
+    logger.addHandler(get_handler(success_stream, args.timestamps, SUCCESS_LOG_LEVEL))
+    logger.addHandler(get_handler(error_stream, args.timestamps, ERROR_LOG_LEVEL))
+    logger.addHandler(get_handler(all_stream, args.timestamps))
     session = Session()
 
     status = False
@@ -370,7 +385,16 @@ def main(argv=None, logger=None, stream=None):
         success = 1
     else:
         success = status
+    # breakpoint()
 
+    if args.sort:
+        error_stream.seek(0)
+        print(error_stream.read(), end="", file=stream)
+        success_stream.seek(0)
+        print(success_stream.read(), end="", file=stream)
+    else:
+        all_stream.seek(0)
+        print(all_stream.read(), end="", file=stream)
     return success
 
 

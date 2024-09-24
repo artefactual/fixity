@@ -15,7 +15,8 @@ from . import utils
 from .models import Report
 from .models import Session
 
-LOG_LEVEL = logging.WARNING
+ERROR_LOG_LEVEL = 100
+SUCCESS_LOG_LEVEL = 200
 
 
 class ArgumentError(Exception):
@@ -152,7 +153,7 @@ def scan(
                 session_id=session_id,
             )
     except reporting.ReportServiceException:
-        logger.log(LOG_LEVEL, f"Unable to POST pre-scan report to {report_url}")
+        logger.log(ERROR_LOG_LEVEL, f"Unable to POST pre-scan report to {report_url}")
     try:
         status, report = storage_service.scan_aip(
             aip,
@@ -164,9 +165,12 @@ def scan(
             force_local=force_local,
         )
         report_data = json.loads(report.report)
-        logger.log(LOG_LEVEL, scan_message(aip, status, report_data["message"]))
+        logger.log(
+            SUCCESS_LOG_LEVEL if status else ERROR_LOG_LEVEL,
+            scan_message(aip, status, report_data["message"]),
+        )
     except Exception as e:
-        logger.log(LOG_LEVEL, str(e))
+        logger.log(ERROR_LOG_LEVEL, str(e))
 
         status = None
         if hasattr(e, "report") and e.report:
@@ -197,7 +201,7 @@ def scan(
             )
         except reporting.ReportServiceException:
             logger.log(
-                LOG_LEVEL,
+                ERROR_LOG_LEVEL,
                 f"Unable to POST report for AIP {aip} to remote service",
             )
     if report:
@@ -258,14 +262,14 @@ def scanall(
                 success = False
         except Exception as e:
             logger.log(
-                LOG_LEVEL,
+                ERROR_LOG_LEVEL,
                 f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
             )
         if throttle_time:
             sleep(throttle_time)
 
     if count > 0:
-        logger.log(LOG_LEVEL, f"Successfully scanned {count} AIPs")
+        logger.log(SUCCESS_LOG_LEVEL, f"Successfully scanned {count} AIPs")
     return success
 
 
@@ -278,7 +282,6 @@ class UTCFormatter(logging.Formatter):
 
 def get_logger() -> logging.Logger:
     logger = logging.getLogger("fixity")
-    logger.setLevel(LOG_LEVEL)
     return logger
 
 

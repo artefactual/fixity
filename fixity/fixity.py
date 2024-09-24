@@ -329,6 +329,7 @@ def main(argv=None, logger=None, stream=None):
     logger.addHandler(get_handler(success_stream, args.timestamps, SUCCESS_LOG_LEVEL))
     logger.addHandler(get_handler(error_stream, args.timestamps, ERROR_LOG_LEVEL))
     logger.addHandler(get_handler(all_stream, args.timestamps))
+
     session = Session()
 
     status = False
@@ -385,7 +386,6 @@ def main(argv=None, logger=None, stream=None):
         success = 1
     else:
         success = status
-    # breakpoint()
 
     if args.sort:
         error_stream.seek(0)

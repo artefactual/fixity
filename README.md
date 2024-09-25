@@ -318,7 +318,7 @@ Installation of Fixity can be completed with the following steps:
       root@host:~# source /usr/share/python/fixity/bin/activate
       (fixity)root@host:~# cd /usr/lib/archivematica/fixity
       (fixity)root@host:/usr/lib/archivematica/fixity# pip install -r requirements.txt
-      (fixity)root@host:/usr/lib/archivematica/fixity# python setup.py install
+      (fixity)root@host:/usr/lib/archivematica/fixity# pip install -e .
       ```
 
 3. Create a symlink from the executable to `/usr/local/bin`.  You must still be

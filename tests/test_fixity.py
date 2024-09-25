@@ -476,6 +476,8 @@ def test_main_handles_exceptions_if_scanall_fails(_get, environment):
 def test_scanall_if_sort_argument_is_passed(_get, environment, mock_check_fixity):
     aip1_uuid = str(uuid.uuid4())
     aip2_uuid = str(uuid.uuid4())
+    aip3_uuid = str(uuid.uuid4())
+    aip4_uuid = str(uuid.uuid4())
     _get.side_effect = [
         mock.Mock(
             **{
@@ -493,29 +495,81 @@ def test_scanall_if_sort_argument_is_passed(_get, environment, mock_check_fixity
                             "status": "UPLOADED",
                             "uuid": aip2_uuid,
                         },
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": aip3_uuid,
+                        },
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": aip4_uuid,
+                        },
                     ],
                 },
             },
             spec=requests.Response,
         ),
         *mock_check_fixity,
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {},
+            },
+            spec=requests.Response,
+        ),
+        mock.Mock(
+            **{
+                "status_code": 500,
+                "json.return_value": {
+                    "success": None,
+                    "message": "",
+                    "failures": {
+                        "files": {"missing": [], "changed": [], "untracked": []}
+                    },
+                    "timestamp": None,
+                },
+            },
+            spec=requests.Response,
+        ),
         *mock_check_fixity,
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {},
+            },
+            spec=requests.Response,
+        ),
+        mock.Mock(
+            **{
+                "status_code": 401,
+                "json.return_value": {
+                    "success": None,
+                    "message": "",
+                    "failures": {
+                        "files": {"missing": [], "changed": [], "untracked": []}
+                    },
+                    "timestamp": None,
+                },
+            },
+            spec=requests.Response,
+        ),
     ]
 
     stream = io.StringIO()
 
     response = fixity.main(["scanall", "--sort"], stream=stream)
 
-    assert response == 0
+    assert response == 1
 
-    _assert_stream_content_matches(
-        stream,
-        [
-            f"Fixity scan succeeded for AIP: {aip1_uuid}",
-            f"Fixity scan succeeded for AIP: {aip2_uuid}",
-            "Successfully scanned 2 AIPs",
-        ],
-    )
+    stream.seek(0)
+    assert [line.rstrip() for line in stream.readlines()] == [
+        f'Storage service at "{STORAGE_SERVICE_URL}" encountered an internal error while scanning AIP {aip2_uuid}',
+        f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP {aip4_uuid}',
+        f"Fixity scan succeeded for AIP: {aip1_uuid}",
+        f"Fixity scan succeeded for AIP: {aip3_uuid}",
+        "Successfully scanned 4 AIPs",
+    ]
 
     assert _get.mock_calls == [
         mock.call(
@@ -536,6 +590,22 @@ def test_scanall_if_sort_argument_is_passed(_get, environment, mock_check_fixity
         ),
         mock.call(
             f"{STORAGE_SERVICE_URL}api/v2/file/{aip2_uuid}/check_fixity/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip3_uuid}/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip3_uuid}/check_fixity/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip4_uuid}/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip4_uuid}/check_fixity/",
             params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
         ),
     ]

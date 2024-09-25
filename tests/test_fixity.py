@@ -10,7 +10,6 @@ import requests
 
 from fixity import fixity
 from fixity import reporting
-from fixity.fixity import get_handler
 from fixity.models import Report
 from fixity.models import Session
 
@@ -35,6 +34,13 @@ mock_scan_aip = mock.Mock(
 
 
 @pytest.fixture
+def environment(monkeypatch):
+    monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
+    monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
+    monkeypatch.setenv("STORAGE_SERVICE_KEY", STORAGE_SERVICE_KEY)
+
+
+@pytest.fixture
 def mock_check_fixity():
     return [
         mock.Mock(
@@ -54,23 +60,14 @@ def _assert_stream_content_matches(stream, expected):
 
 
 @mock.patch("requests.get")
-def test_scan(_get, mock_check_fixity):
+def test_scan(_get, environment, mock_check_fixity):
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
     stream = io.StringIO()
-    logger = fixity.get_logger()
-    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
-    response = fixity.scan(
-        aip=str(aip_id),
-        ss_url=STORAGE_SERVICE_URL,
-        ss_user=STORAGE_SERVICE_USER,
-        ss_key=STORAGE_SERVICE_KEY,
-        session=SESSION,
-        logger=logger,
-    )
+    response = fixity.main(["scan", str(aip_id)], stream=stream)
 
-    assert response is True
+    assert response == 0
 
     _assert_stream_content_matches(stream, [f"Fixity scan succeeded for AIP: {aip_id}"])
 
@@ -88,23 +85,16 @@ def test_scan(_get, mock_check_fixity):
 
 @mock.patch("time.time")
 @mock.patch("requests.get")
-@mock.patch.object(fixity, "Session", lambda: SESSION)
 def test_scan_if_timestamps_argument_is_passed(
-    _get, time, monkeypatch, mock_check_fixity
+    _get, time, environment, mock_check_fixity
 ):
     _get.side_effect = mock_check_fixity
-    monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
-    monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
-    monkeypatch.setenv("STORAGE_SERVICE_KEY", STORAGE_SERVICE_KEY)
     aip_id = uuid.uuid4()
     timestamp = 1514775600
     time.return_value = timestamp
     stream = io.StringIO()
-    logger = fixity.get_logger()
 
-    response = fixity.main(
-        ["scan", str(aip_id), "--timestamps"], logger=logger, stream=stream
-    )
+    response = fixity.main(["scan", str(aip_id), "--timestamps"], stream=stream)
 
     assert response == 0
 
@@ -125,6 +115,7 @@ def test_scan_if_timestamps_argument_is_passed(
     ]
 
 
+@mock.patch("fixity.fixity.uuid4")
 @mock.patch("fixity.utils.utcnow")
 @mock.patch("requests.get")
 @mock.patch(
@@ -134,26 +125,20 @@ def test_scan_if_timestamps_argument_is_passed(
         mock.Mock(status_code=201, spec=requests.Response),
     ],
 )
-def test_scan_if_report_url_exists(_post, _get, utcnow, mock_check_fixity):
+def test_scan_if_report_url_exists(
+    _post, _get, utcnow, uuid4, mock_check_fixity, environment, monkeypatch
+):
+    uuid4.return_value = expected_uuid = uuid.uuid4()
     _get.side_effect = mock_check_fixity
+    monkeypatch.setenv("REPORT_URL", REPORT_URL)
     start_time = 1514775600
     utcnow.return_value = datetime.fromtimestamp(start_time, timezone.utc)
     aip_id = uuid.uuid4()
     stream = io.StringIO()
-    logger = fixity.get_logger()
-    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
-    response = fixity.scan(
-        aip=str(aip_id),
-        ss_url=STORAGE_SERVICE_URL,
-        ss_user=STORAGE_SERVICE_USER,
-        ss_key=STORAGE_SERVICE_KEY,
-        session=SESSION,
-        logger=logger,
-        report_url=REPORT_URL,
-    )
+    response = fixity.main(["scan", str(aip_id)], stream=stream)
 
-    assert response is True
+    assert response == 0
 
     assert _get.mock_calls == [
         mock.call(
@@ -168,7 +153,9 @@ def test_scan_if_report_url_exists(_post, _get, utcnow, mock_check_fixity):
     assert _post.mock_calls == [
         mock.call(
             f"{REPORT_URL}api/fixity/{aip_id}",
-            data=json.dumps({"started": start_time}),
+            data=json.dumps(
+                {"started": start_time, "session_uuid": str(expected_uuid)}
+            ),
             headers={"Content-Type": "application/json"},
         ),
         mock.call(
@@ -183,6 +170,7 @@ def test_scan_if_report_url_exists(_post, _get, utcnow, mock_check_fixity):
                     "timestamp": None,
                     "started": start_time,
                     "finished": start_time,
+                    "session_uuid": str(expected_uuid),
                 }
             ),
             headers={"Content-Type": "application/json"},
@@ -208,24 +196,17 @@ def test_scan_if_report_url_exists(_post, _get, utcnow, mock_check_fixity):
         ),
     ],
 )
-def test_scan_handles_exceptions_if_report_url_exists(_post, _get, mock_check_fixity):
+def test_scan_handles_exceptions_if_report_url_exists(
+    _post, _get, environment, monkeypatch, mock_check_fixity
+):
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
     stream = io.StringIO()
-    logger = fixity.get_logger()
-    logger.addHandler(get_handler(stream=stream, timestamps=False))
+    monkeypatch.setenv("REPORT_URL", REPORT_URL)
 
-    response = fixity.scan(
-        aip=str(aip_id),
-        ss_url=STORAGE_SERVICE_URL,
-        ss_user=STORAGE_SERVICE_USER,
-        ss_key=STORAGE_SERVICE_KEY,
-        session=SESSION,
-        logger=logger,
-        report_url=REPORT_URL,
-    )
+    response = fixity.main(["scan", str(aip_id)], stream=stream)
 
-    assert response is True
+    assert response == 0
 
     _assert_stream_content_matches(
         stream,
@@ -256,20 +237,11 @@ def test_scan_handles_exceptions_if_report_url_exists(_post, _get, mock_check_fi
         ),
     ],
 )
-def test_scan_handles_exceptions(_get):
+def test_scan_handles_exceptions(_get, environment):
     aip_id = uuid.uuid4()
     stream = io.StringIO()
-    logger = fixity.get_logger()
-    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
-    response = fixity.scan(
-        aip=str(aip_id),
-        ss_url=STORAGE_SERVICE_URL,
-        ss_user=STORAGE_SERVICE_USER,
-        ss_key=STORAGE_SERVICE_KEY,
-        session=SESSION,
-        logger=logger,
-    )
+    response = fixity.main(["scan", str(aip_id)], stream=stream)
 
     assert response is None
 
@@ -300,20 +272,10 @@ def test_scan_handles_exceptions(_get):
         ),
     ],
 )
-def test_scan_handles_exceptions_if_no_scan_attempted(_get):
+def test_scan_handles_exceptions_if_no_scan_attempted(_get, environment):
     aip_id = uuid.uuid4()
-    stream = io.StringIO()
-    logger = fixity.get_logger()
-    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
-    response = fixity.scan(
-        aip=str(aip_id),
-        ss_url=STORAGE_SERVICE_URL,
-        ss_user=STORAGE_SERVICE_USER,
-        ss_key=STORAGE_SERVICE_KEY,
-        session=SESSION,
-        logger=logger,
-    )
+    response = fixity.main(["scan", str(aip_id)])
 
     assert response is None
 
@@ -344,9 +306,9 @@ def test_scan_message(status, error_message):
 @mock.patch(
     "requests.get",
 )
-def test_scanall(_get, mock_check_fixity):
-    aip1_uuid = "41e12f76-354e-402d-85ee-f812cb72f6e6"
-    aip2_uuid = "807ecfb7-08b1-4435-87ec-5c6bfbe62225"
+def test_scanall(_get, environment, mock_check_fixity):
+    aip1_uuid = str(uuid.uuid4())
+    aip2_uuid = str(uuid.uuid4())
     _get.side_effect = [
         mock.Mock(
             **{
@@ -373,18 +335,10 @@ def test_scanall(_get, mock_check_fixity):
         *mock_check_fixity,
     ]
     stream = io.StringIO()
-    logger = fixity.get_logger()
-    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
-    response = fixity.scanall(
-        ss_url=STORAGE_SERVICE_URL,
-        ss_user=STORAGE_SERVICE_USER,
-        ss_key=STORAGE_SERVICE_KEY,
-        session=SESSION,
-        logger=logger,
-    )
+    response = fixity.main(["scanall"], stream=stream)
 
-    assert response is True
+    assert response == 0
 
     _assert_stream_content_matches(
         stream,
@@ -397,7 +351,7 @@ def test_scanall(_get, mock_check_fixity):
 
 
 @mock.patch("requests.get")
-def test_scanall_handles_exceptions(_get):
+def test_scanall_handles_exceptions(_get, environment):
     aip_id1 = str(uuid.uuid4())
     aip_id2 = str(uuid.uuid4())
     _get.side_effect = [
@@ -441,20 +395,11 @@ def test_scanall_handles_exceptions(_get):
         ),
         mock_scan_aip,
     ]
-
     stream = io.StringIO()
-    logger = fixity.get_logger()
-    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
-    response = fixity.scanall(
-        ss_url=STORAGE_SERVICE_URL,
-        ss_user=STORAGE_SERVICE_USER,
-        ss_key=STORAGE_SERVICE_KEY,
-        session=SESSION,
-        logger=logger,
-    )
+    response = fixity.main(["scanall"], stream=stream)
 
-    assert response is False
+    assert response == 1
 
     _assert_stream_content_matches(
         stream,
@@ -467,27 +412,7 @@ def test_scanall_handles_exceptions(_get):
 
 
 @mock.patch("requests.get")
-@mock.patch.object(fixity, "Session", lambda: SESSION)
-def test_main_scan(_get, monkeypatch, mock_check_fixity):
-    _get.side_effect = mock_check_fixity
-    monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
-    monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
-    monkeypatch.setenv("STORAGE_SERVICE_KEY", STORAGE_SERVICE_KEY)
-    aip_id = str(uuid.uuid4())
-    stream = io.StringIO()
-    logger = fixity.get_logger()
-    logger.addHandler(get_handler(stream=stream, timestamps=False))
-
-    result = fixity.main(["scan", aip_id])
-
-    assert result == 0
-
-    _assert_stream_content_matches(stream, [f"Fixity scan succeeded for AIP: {aip_id}"])
-
-
-@mock.patch("requests.get")
-@mock.patch.object(fixity, "Session", lambda: SESSION)
-def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch):
+def test_main_handles_exceptions_if_scanall_fails(_get, environment):
     aip_id1 = str(uuid.uuid4())
     aip_id2 = str(uuid.uuid4())
     _get.side_effect = [
@@ -531,15 +456,9 @@ def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch):
         ),
         mock_scan_aip,
     ]
-
-    monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
-    monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
-    monkeypatch.setenv("STORAGE_SERVICE_KEY", STORAGE_SERVICE_KEY)
     stream = io.StringIO()
-    logger = fixity.get_logger()
-    logger.addHandler(get_handler(stream=stream, timestamps=False))
 
-    result = fixity.main(["scanall"])
+    result = fixity.main(["scanall"], stream=stream)
 
     assert result == 1
 
@@ -551,3 +470,142 @@ def test_main_handles_exceptions_if_scanall_fails(_get, monkeypatch):
             "Successfully scanned 2 AIPs",
         ],
     )
+
+
+@mock.patch("requests.get")
+def test_scanall_if_sort_argument_is_passed(_get, environment, mock_check_fixity):
+    aip1_uuid = str(uuid.uuid4())
+    aip2_uuid = str(uuid.uuid4())
+    aip3_uuid = str(uuid.uuid4())
+    aip4_uuid = str(uuid.uuid4())
+    _get.side_effect = [
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {
+                    "meta": {"next": None},
+                    "objects": [
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": aip1_uuid,
+                        },
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": aip2_uuid,
+                        },
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": aip3_uuid,
+                        },
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": aip4_uuid,
+                        },
+                    ],
+                },
+            },
+            spec=requests.Response,
+        ),
+        *mock_check_fixity,
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {},
+            },
+            spec=requests.Response,
+        ),
+        mock.Mock(
+            **{
+                "status_code": 500,
+                "json.return_value": {
+                    "success": None,
+                    "message": "",
+                    "failures": {
+                        "files": {"missing": [], "changed": [], "untracked": []}
+                    },
+                    "timestamp": None,
+                },
+            },
+            spec=requests.Response,
+        ),
+        *mock_check_fixity,
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {},
+            },
+            spec=requests.Response,
+        ),
+        mock.Mock(
+            **{
+                "status_code": 401,
+                "json.return_value": {
+                    "success": None,
+                    "message": "",
+                    "failures": {
+                        "files": {"missing": [], "changed": [], "untracked": []}
+                    },
+                    "timestamp": None,
+                },
+            },
+            spec=requests.Response,
+        ),
+    ]
+
+    stream = io.StringIO()
+
+    response = fixity.main(["scanall", "--sort"], stream=stream)
+
+    assert response == 1
+
+    stream.seek(0)
+    assert [line.rstrip() for line in stream.readlines()] == [
+        f'Storage service at "{STORAGE_SERVICE_URL}" encountered an internal error while scanning AIP {aip2_uuid}',
+        f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP {aip4_uuid}',
+        f"Fixity scan succeeded for AIP: {aip1_uuid}",
+        f"Fixity scan succeeded for AIP: {aip3_uuid}",
+        "Successfully scanned 4 AIPs",
+    ]
+
+    assert _get.mock_calls == [
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/",
+            params={"username": "test", "api_key": "test"},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip1_uuid}/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip1_uuid}/check_fixity/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip2_uuid}/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip2_uuid}/check_fixity/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip3_uuid}/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip3_uuid}/check_fixity/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip4_uuid}/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip4_uuid}/check_fixity/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+    ]

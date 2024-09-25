@@ -38,6 +38,9 @@ running; see the section on _ENVIRONMENT VARIABLES_ for information.
 * `--timestamps`:
     It adds a timestamp to the beginning of each line of output.
 
+* `--sort`:
+    Sort the AIPs based on result of fixity check success or failure.
+
 ## COMMANDS
 
 * `scan <UUID>`:

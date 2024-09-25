@@ -1,3 +1,4 @@
+import io
 import json
 import logging
 import os
@@ -14,6 +15,9 @@ from . import storage_service
 from . import utils
 from .models import Report
 from .models import Session
+
+ERROR_LOG_LEVEL = 100
+SUCCESS_LOG_LEVEL = 200
 
 
 class ArgumentError(Exception):
@@ -47,6 +51,11 @@ def parse_arguments(argv):
         "--timestamps",
         action="store_true",
         help="Add a timestamp to the beginning of each line of output.",
+    )
+    parser.add_argument(
+        "--sort",
+        action="store_true",
+        help="Sort the AIPs based on result of fixity check success or failure.",
     )
     args = parser.parse_args(argv)
 
@@ -145,7 +154,7 @@ def scan(
                 session_id=session_id,
             )
     except reporting.ReportServiceException:
-        logger.log(logging.WARNING, f"Unable to POST pre-scan report to {report_url}")
+        logger.log(ERROR_LOG_LEVEL, f"Unable to POST pre-scan report to {report_url}")
     try:
         status, report = storage_service.scan_aip(
             aip,
@@ -157,9 +166,12 @@ def scan(
             force_local=force_local,
         )
         report_data = json.loads(report.report)
-        logger.log(logging.WARNING, scan_message(aip, status, report_data["message"]))
+        logger.log(
+            SUCCESS_LOG_LEVEL if status else ERROR_LOG_LEVEL,
+            scan_message(aip, status, report_data["message"]),
+        )
     except Exception as e:
-        logger.log(logging.WARNING, str(e))
+        logger.log(ERROR_LOG_LEVEL, str(e))
 
         status = None
         if hasattr(e, "report") and e.report:
@@ -190,7 +202,7 @@ def scan(
             )
         except reporting.ReportServiceException:
             logger.log(
-                logging.WARNING,
+                ERROR_LOG_LEVEL,
                 f"Unable to POST report for AIP {aip} to remote service",
             )
     if report:
@@ -251,14 +263,14 @@ def scanall(
                 success = False
         except Exception as e:
             logger.log(
-                logging.WARNING,
+                ERROR_LOG_LEVEL,
                 f"Internal error encountered while scanning AIP {aip['uuid']} ({type(e).__name__})",
             )
         if throttle_time:
             sleep(throttle_time)
 
     if count > 0:
-        logger.log(logging.WARNING, f"Successfully scanned {count} AIPs")
+        logger.log(SUCCESS_LOG_LEVEL, f"Successfully scanned {count} AIPs")
     return success
 
 
@@ -271,18 +283,26 @@ class UTCFormatter(logging.Formatter):
 
 def get_logger() -> logging.Logger:
     logger = logging.getLogger("fixity")
-    logger.setLevel(logging.WARNING)
     return logger
 
 
-def get_handler(stream, timestamps):
-    stderr_handler = logging.StreamHandler(stream=stream)
+def filter_maker(level):
+    def filter(record):
+        return record.levelno == level
+
+    return filter
+
+
+def get_handler(stream, timestamps, log_level=None):
+    handler = logging.StreamHandler(stream=stream)
+    if log_level is not None:
+        handler.addFilter(filter_maker(log_level))
     if timestamps:
         message_format = UTCFormatter("[%(asctime)s] %(message)s")
     else:
         message_format = logging.Formatter("%(message)s")
-    stderr_handler.setFormatter(message_format)
-    return stderr_handler
+    handler.setFormatter(message_format)
+    return handler
 
 
 def main(argv=None, logger=None, stream=None):
@@ -303,7 +323,13 @@ def main(argv=None, logger=None, stream=None):
     except ArgumentError as e:
         return e
 
-    logger.addHandler(get_handler(stream=stream, timestamps=args.timestamps))
+    success_stream = io.StringIO()
+    error_stream = io.StringIO()
+    all_stream = io.StringIO()
+    logger.addHandler(get_handler(success_stream, args.timestamps, SUCCESS_LOG_LEVEL))
+    logger.addHandler(get_handler(error_stream, args.timestamps, ERROR_LOG_LEVEL))
+    logger.addHandler(get_handler(all_stream, args.timestamps))
+
     session = Session()
 
     status = False
@@ -361,6 +387,14 @@ def main(argv=None, logger=None, stream=None):
     else:
         success = status
 
+    if args.sort:
+        error_stream.seek(0)
+        print(error_stream.read(), end="", file=stream)
+        success_stream.seek(0)
+        print(success_stream.read(), end="", file=stream)
+    else:
+        all_stream.seek(0)
+        print(all_stream.read(), end="", file=stream)
     return success
 
 

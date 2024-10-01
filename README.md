@@ -21,7 +21,7 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [Development](#development)
-- [Tests](#tests)
+  - [Tests](#tests)
 - [Security](#security)
 - [Copyright](#copyright)
 
@@ -401,53 +401,60 @@ For more information on usage, consult the [manpage](docs/fixity.1.md).
 
 ## Development
 
-This fixity environment is specifically **designed for developers**. The app 
-is designed to run on python 3.8 - 3.12 so you'll need to create a virtual 
-environment with any of those versions. Activate your virtual environment 
-and clone the fixity repository as below.
+To set up this repository for local development:
 
-First, activate the virtual environment. In the following examples `~/.venv` 
-will represent the virtual environment used: 
+1. Clone this repository:
 
-```shell
-source ~/.venv/bin/activate
-```
+   ```shell
+   git clone git@github.com:artefactual/fixity
+   ```
 
-Next, clone this repository this way:
-```shell
-git clone https://github.com/artefactual/fixity.git
-```
+2. Enter the repository directory:
 
-Next, run the installation commands within the `fixity` directory:
-```shell
-cd fixity/
-```
+   ```shell
+   cd fixity
+   ```
 
-Next, run the following command to install dev dependencies.
-```shell
-pip install -e .[dev]
-```
-You should able to access the fixity commands.
+3. Create a virtual environment with a recent version of Python:
 
-## Tests
+   ```shell
+   python3 -m venv .venv
+   ```
 
-`tox` sets up and calls pytest to run the tests. The configurations live in
-the `pyproject.toml` file.
+4. Activate the virtual environment:
 
-First, install tox this way:
+   ```shell
+   source .venv/bin/activate
+   ```
+
+5. Install the project in editable mode passing the development extra:
+
+   ```shell
+   pip install -e .[dev]
+   ```
+
+### Tests
+
+This project uses `tox` to manage and run tests with `pytest`. You can find
+the configuration details in the `[tool.tox]` section of the `pyproject.toml`
+file.
+
+You can install `tox` in your virtual environment:
+
 ```shell
 pip install tox
 ```
 
-Now, run all the tests in `tox`:
-```shell
-tox -e py310
-```
-Inplace of `py310` you can run tests in other python versions available in tox.
+Run all the tests this way:
 
-Tests can also be run on specific test modules this way:
 ```shell
-tox -e py310 -- -k "test_fixity"
+tox -e py
+```
+
+You can pass options to `pytest`:
+
+```shell
+tox -e py -- -vvv -k "test_fixity"
 ```
 
 ## Security

@@ -20,6 +20,8 @@
   - [How this looks in the Storage Service](#how-this-looks-in-the-storage-service)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Development](#development)
+- [Tests](#tests)
 - [Security](#security)
 - [Copyright](#copyright)
 
@@ -396,6 +398,57 @@ Installation of Fixity can be completed with the following steps:
 ## Usage
 
 For more information on usage, consult the [manpage](docs/fixity.1.md).
+
+## Development
+
+This fixity environment is specifically **designed for developers**. The app 
+is designed to run on python 3.8 - 3.12 so you'll need to create a virtual 
+environment with any of those versions. Activate your virtual environment 
+and clone the fixity repository as below.
+
+First, activate the virtual environment. In the following examples `~/.venv` 
+will represent the virtual environment used: 
+
+```shell
+source ~/.venv/bin/activate
+```
+
+Next, clone this repository this way:
+```shell
+git clone https://github.com/artefactual/fixity.git
+```
+
+Next, run the installation commands within the `fixity` directory:
+```shell
+cd fixity/
+```
+
+Next, run the following command to install dev dependencies.
+```shell
+pip install -e .[dev]
+```
+You should able to access the fixity commands.
+
+## Tests
+
+`tox` sets up and calls pytest to run the tests. The configurations live in
+the `pyproject.toml` file.
+
+First, install tox this way:
+```shell
+pip install tox
+```
+
+Now, run all the tests in `tox`:
+```shell
+tox -e py310
+```
+Inplace of `py310` you can run tests in other python versions available in tox.
+
+Tests can also be run on specific test modules this way:
+```shell
+tox -e py310 -- -k "test_fixity"
+```
 
 ## Security
 

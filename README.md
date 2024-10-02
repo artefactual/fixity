@@ -20,6 +20,8 @@
   - [How this looks in the Storage Service](#how-this-looks-in-the-storage-service)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Development](#development)
+  - [Tests](#tests)
 - [Security](#security)
 - [Copyright](#copyright)
 
@@ -396,6 +398,64 @@ Installation of Fixity can be completed with the following steps:
 ## Usage
 
 For more information on usage, consult the [manpage](docs/fixity.1.md).
+
+## Development
+
+To set up this repository for local development:
+
+1. Clone this repository:
+
+   ```shell
+   git clone git@github.com:artefactual/fixity
+   ```
+
+2. Enter the repository directory:
+
+   ```shell
+   cd fixity
+   ```
+
+3. Create a virtual environment with a recent version of Python:
+
+   ```shell
+   python3 -m venv .venv
+   ```
+
+4. Activate the virtual environment:
+
+   ```shell
+   source .venv/bin/activate
+   ```
+
+5. Install the project in editable mode passing the development extra:
+
+   ```shell
+   pip install -e .[dev]
+   ```
+
+### Tests
+
+This project uses `tox` to manage and run tests with `pytest`. You can find
+the configuration details in the `[tool.tox]` section of the `pyproject.toml`
+file.
+
+You can install `tox` in your virtual environment:
+
+```shell
+pip install tox
+```
+
+Run all the tests this way:
+
+```shell
+tox -e py
+```
+
+You can pass options to `pytest`:
+
+```shell
+tox -e py -- -vvv -k "test_fixity"
+```
 
 ## Security
 

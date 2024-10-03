@@ -26,5 +26,6 @@ repos:
   hooks:
     - id: mypy
       additional_dependencies:
+        - pytest
         - types-requests
         - types-python-dateutil

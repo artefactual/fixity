@@ -127,3 +127,20 @@ legacy_tox_ini = """
     deps = pre-commit
     commands = pre-commit run --all-files --show-diff-on-failure
 """
+
+[tool.mypy]
+strict = true
+
+[[tool.mypy.overrides]]
+module = [
+    "fixity.*",
+    "tests.*",
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+    "tests.test_fixity",
+]
+ignore_errors = false
+disallow_untyped_calls = false

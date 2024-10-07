@@ -8,7 +8,8 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import create_engine
-from sqlalchemy.orm import backref, DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import backref
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker

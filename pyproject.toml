@@ -143,4 +143,4 @@ module = [
     "tests.test_fixity",
 ]
 ignore_errors = false
-disallow_untyped_calls = false
+

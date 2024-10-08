@@ -1,10 +1,10 @@
 import io
 import json
-import typing
 import uuid
 from datetime import datetime
 from datetime import timezone
 from typing import List
+from typing import TextIO
 from unittest import mock
 
 import pytest
@@ -56,14 +56,14 @@ def mock_check_fixity() -> List[mock.Mock]:
     ]
 
 
-def _assert_stream_content_matches(stream: typing.TextIO, expected: List[str]) -> None:
+def _assert_stream_content_matches(stream: TextIO, expected: List[str]) -> None:
     stream.seek(0)
     assert [line.strip() for line in stream.readlines()] == expected
 
 
 @mock.patch("requests.get")
 def test_scan(
-    _get: mock.Mock, environment: mock.Mock, mock_check_fixity: mock.Mock
+    _get: mock.Mock, environment: None, mock_check_fixity: List[mock.Mock]
 ) -> None:
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
@@ -92,8 +92,8 @@ def test_scan(
 def test_scan_if_timestamps_argument_is_passed(
     _get: mock.Mock,
     time: mock.Mock,
-    environment: pytest.MonkeyPatch,
-    mock_check_fixity: mock.Mock,
+    environment: None,
+    mock_check_fixity: List[mock.Mock],
 ) -> None:
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
@@ -137,8 +137,8 @@ def test_scan_if_report_url_exists(
     _get: mock.Mock,
     utcnow: mock.Mock,
     uuid4: mock.Mock,
-    mock_check_fixity: mock.Mock,
-    environment: pytest.MonkeyPatch,
+    mock_check_fixity: List[mock.Mock],
+    environment: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     uuid4.return_value = expected_uuid = uuid.uuid4()
@@ -212,9 +212,9 @@ def test_scan_if_report_url_exists(
 def test_scan_handles_exceptions_if_report_url_exists(
     _post: mock.Mock,
     _get: mock.Mock,
-    environment: pytest.MonkeyPatch,
+    environment: None,
     monkeypatch: pytest.MonkeyPatch,
-    mock_check_fixity: mock.Mock,
+    mock_check_fixity: List[mock.Mock],
 ) -> None:
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
@@ -254,9 +254,7 @@ def test_scan_handles_exceptions_if_report_url_exists(
         ),
     ],
 )
-def test_scan_handles_exceptions(
-    _get: mock.Mock, environment: pytest.MonkeyPatch
-) -> None:
+def test_scan_handles_exceptions(_get: mock.Mock, environment: None) -> None:
     aip_id = uuid.uuid4()
     stream = io.StringIO()
 
@@ -292,7 +290,7 @@ def test_scan_handles_exceptions(
     ],
 )
 def test_scan_handles_exceptions_if_no_scan_attempted(
-    _get: mock.Mock, environment: pytest.MonkeyPatch
+    _get: mock.Mock, environment: None
 ) -> None:
     aip_id = uuid.uuid4()
 
@@ -312,7 +310,7 @@ def test_scan_handles_exceptions_if_no_scan_attempted(
     ],
     ids=["Success", "Fail", "Did not run"],
 )
-def test_scan_message(status: mock.Mock, error_message: mock.Mock) -> None:
+def test_scan_message(status: bool, error_message: str) -> None:
     aip_id = uuid.uuid4()
 
     response = fixity.scan_message(
@@ -328,7 +326,7 @@ def test_scan_message(status: mock.Mock, error_message: mock.Mock) -> None:
     "requests.get",
 )
 def test_scanall(
-    _get: mock.Mock, environment: pytest.MonkeyPatch, mock_check_fixity: mock.Mock
+    _get: mock.Mock, environment: None, mock_check_fixity: List[mock.Mock]
 ) -> None:
     aip1_uuid = str(uuid.uuid4())
     aip2_uuid = str(uuid.uuid4())
@@ -374,9 +372,7 @@ def test_scanall(
 
 
 @mock.patch("requests.get")
-def test_scanall_handles_exceptions(
-    _get: mock.Mock, environment: pytest.MonkeyPatch
-) -> None:
+def test_scanall_handles_exceptions(_get: mock.Mock, environment: None) -> None:
     aip_id1 = str(uuid.uuid4())
     aip_id2 = str(uuid.uuid4())
     _get.side_effect = [
@@ -438,7 +434,7 @@ def test_scanall_handles_exceptions(
 
 @mock.patch("requests.get")
 def test_main_handles_exceptions_if_scanall_fails(
-    _get: mock.Mock, environment: pytest.MonkeyPatch
+    _get: mock.Mock, environment: None
 ) -> None:
     aip_id1 = str(uuid.uuid4())
     aip_id2 = str(uuid.uuid4())
@@ -501,7 +497,7 @@ def test_main_handles_exceptions_if_scanall_fails(
 
 @mock.patch("requests.get")
 def test_scanall_if_sort_argument_is_passed(
-    _get: mock.Mock, environment: pytest.MonkeyPatch, mock_check_fixity: mock.Mock
+    _get: mock.Mock, environment: None, mock_check_fixity: List[mock.Mock]
 ) -> None:
     aip1_uuid = str(uuid.uuid4())
     aip2_uuid = str(uuid.uuid4())

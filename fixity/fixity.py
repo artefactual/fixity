@@ -4,10 +4,14 @@ import logging
 import os
 import sys
 import traceback
+import uuid
 from argparse import ArgumentParser
 from datetime import datetime
 from datetime import timezone
 from time import sleep
+from typing import List
+from typing import TextIO
+from typing import Union
 from uuid import uuid4
 
 from . import reporting
@@ -91,7 +95,7 @@ def fetch_environment_variables(namespace):
         namespace.report_user = namespace.report_pass = None
 
 
-def scan_message(aip_uuid, status, message):
+def scan_message(aip_uuid: uuid.UUID, status: bool, message: str) -> str:
     if status is True:
         succeeded = "succeeded"
     elif status is False:
@@ -305,7 +309,9 @@ def get_handler(stream, timestamps, log_level=None):
     return handler
 
 
-def main(argv=None, logger=None, stream=None):
+def main(
+    argv: List[str] = None, logger: logging.Logger = None, stream: TextIO = None
+) -> Union[int, bool]:
     if logger is None:
         logger = get_logger()
     if stream is None:

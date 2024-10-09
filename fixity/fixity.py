@@ -8,6 +8,11 @@ from argparse import ArgumentParser
 from datetime import datetime
 from datetime import timezone
 from time import sleep
+from typing import List
+from typing import Optional
+from typing import TextIO
+from typing import Type
+from typing import Union
 from uuid import uuid4
 
 from . import reporting
@@ -91,7 +96,7 @@ def fetch_environment_variables(namespace):
         namespace.report_user = namespace.report_pass = None
 
 
-def scan_message(aip_uuid, status, message):
+def scan_message(aip_uuid: str, status: bool, message: str) -> str:
     if status is True:
         succeeded = "succeeded"
     elif status is False:
@@ -305,7 +310,11 @@ def get_handler(stream, timestamps, log_level=None):
     return handler
 
 
-def main(argv=None, logger=None, stream=None):
+def main(
+    argv: Optional[List[str]] = None,
+    logger: Union[logging.Logger] = None,
+    stream: Optional[TextIO] = None,
+) -> Union[int, bool, Type[Exception]]:
     if logger is None:
         logger = get_logger()
     if stream is None:

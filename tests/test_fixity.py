@@ -137,8 +137,8 @@ def test_scan_if_report_url_exists(
     _get: mock.Mock,
     utcnow: mock.Mock,
     uuid4: mock.Mock,
-    mock_check_fixity: List[mock.Mock],
     environment: None,
+    mock_check_fixity: List[mock.Mock],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     uuid4.return_value = expected_uuid = uuid.uuid4()
@@ -213,8 +213,8 @@ def test_scan_handles_exceptions_if_report_url_exists(
     _post: mock.Mock,
     _get: mock.Mock,
     environment: None,
-    monkeypatch: pytest.MonkeyPatch,
     mock_check_fixity: List[mock.Mock],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()

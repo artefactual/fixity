@@ -311,7 +311,7 @@ def get_handler(stream, timestamps, log_level=None):
 
 
 def main(
-    argv: Optional[List[str]],
+    argv: Optional[List[str]] = None,
     logger: Union[logging.Logger] = None,
     stream: Optional[TextIO] = None,
 ) -> Union[int, bool, Type[Exception]]:

@@ -311,7 +311,7 @@ def test_scan_handles_exceptions_if_no_scan_attempted(
     ids=["Success", "Fail", "Did not run"],
 )
 def test_scan_message(status: bool, error_message: str) -> None:
-    aip_id = uuid.uuid4()
+    aip_id = str(uuid.uuid4())
 
     response = fixity.scan_message(
         aip_uuid=aip_id, status=status, message=error_message

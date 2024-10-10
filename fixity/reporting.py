@@ -1,8 +1,12 @@
 import calendar
 import json
+from datetime import datetime
+from typing import Optional
 
 import requests
 
+from .models import Report
+from .models import Session
 from .utils import check_valid_uuid
 
 
@@ -10,7 +14,13 @@ class ReportServiceException(Exception):
     pass
 
 
-def post_pre_scan_report(aip, start_time, report_url, report_auth=(), session_id=None):
+def post_pre_scan_report(
+    aip: str,
+    start_time: Optional[datetime],
+    report_url: Optional[str],
+    report_auth: Optional[str] = (),
+    session_id: Session = None,
+) -> bool:
     """
     Post a pre-scan report to a remote system.
 
@@ -51,7 +61,13 @@ def post_pre_scan_report(aip, start_time, report_url, report_auth=(), session_id
     return True
 
 
-def post_success_report(aip, report, report_url, report_auth=(), session_id=None):
+def post_success_report(
+    aip: str,
+    report: Optional[Report],
+    report_url: Optional[str],
+    report_auth: Optional[str] = (),
+    session_id: Session = None,
+) -> Optional[bool]:
     """
     POST a JSON fixity scan report to a remote system.
 

@@ -135,7 +135,7 @@ def scan(
     :param str ss_user: Storage service user to authenticate as
     :param str ss_key: API key of the storage service user
     :param Logger logger: Logger to print output.
-    :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be     transmitted.
+    :param str report_url: The base URL to a server to which the report will be POSTed after the scan completes. If absent, the report will not be transmitted.
     :param report_auth: Authentication for the report_url. Tupel of (user, password) for HTTP auth.
     :param session_id: Identifier for this session, allowing every scan from one run to be identified.
     :param bool force_local: If True, will request the Storage Service to perform a local fixity check, instead of using the Space's fixity (if available).

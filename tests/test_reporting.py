@@ -32,8 +32,9 @@ def test_posting_prescan_report(_post: mock.Mock) -> None:
 
 
 def test_posting_prescan_report_raises_on_invalid_uuid() -> None:
+    start_time = datetime.fromtimestamp(1400022946)
     with pytest.raises(InvalidUUID):
-        reporting.post_pre_scan_report("foo", None, None)
+        reporting.post_pre_scan_report("foo", start_time, REPORT_URL)
 
 
 @mock.patch(
@@ -81,8 +82,16 @@ def test_posting_success_report(_post: mock.Mock) -> None:
 
 
 def test_posting_success_report_raises_on_invalid_uuid() -> None:
+    json_report = json_string("test_failed_report.json")
+    report = Report(
+        begun=datetime.fromtimestamp(1400022946),
+        ended=datetime.fromtimestamp(1400023208),
+        success=False,
+        posted=False,
+        report=json_report,
+    )
     with pytest.raises(InvalidUUID):
-        reporting.post_success_report("foo", None, None)
+        reporting.post_success_report("foo", report, REPORT_URL)
 
 
 @mock.patch(

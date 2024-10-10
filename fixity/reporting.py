@@ -2,11 +2,11 @@ import calendar
 import json
 from datetime import datetime
 from typing import Optional
+from typing import Tuple
 
 import requests
 
 from .models import Report
-from .models import Session
 from .utils import check_valid_uuid
 
 
@@ -16,10 +16,10 @@ class ReportServiceException(Exception):
 
 def post_pre_scan_report(
     aip: str,
-    start_time: Optional[datetime],
-    report_url: Optional[str],
-    report_auth: Optional[str] = (),
-    session_id: Session = None,
+    start_time: datetime,
+    report_url: str,
+    report_auth: Tuple[Optional[str], Optional[str]] = (),
+    session_id: str = None,
 ) -> bool:
     """
     Post a pre-scan report to a remote system.
@@ -63,10 +63,10 @@ def post_pre_scan_report(
 
 def post_success_report(
     aip: str,
-    report: Optional[Report],
-    report_url: Optional[str],
-    report_auth: Optional[str] = (),
-    session_id: Session = None,
+    report: Report,
+    report_url: str,
+    report_auth: Tuple[Optional[str], Optional[str]] = (),
+    session_id: str = None,
 ) -> Optional[bool]:
     """
     POST a JSON fixity scan report to a remote system.

@@ -46,7 +46,7 @@ def validate_arguments(args):
         raise ArgumentError("An AIP UUID must be specified when scanning a single AIP")
 
 
-def parse_arguments(argv: Optional[List[str]]) -> FixityArgs:
+def get_parser() -> ArgumentParser:
     parser = ArgumentParser()
     parser.add_argument("command", choices=["scan", "scanall"], help="Command to run.")
     parser.add_argument("aip", nargs="?", help="If 'scan', UUID of the AIP to scan")
@@ -74,10 +74,15 @@ def parse_arguments(argv: Optional[List[str]]) -> FixityArgs:
         action="store_true",
         help="Sort the AIPs based on result of fixity check success or failure.",
     )
-    args = parser.parse_args(argv)
 
-    validate_arguments(args)
-    return FixityArgs(**vars(args))
+    return parser
+
+
+def parse_arguments(parser: ArgumentParser, argv: Optional[List[str]]) -> FixityArgs:
+    namespace = parser.parse_args(argv)
+    validate_arguments(namespace)
+
+    return FixityArgs(**vars(namespace))
 
 
 def _get_environment_variable(var):
@@ -327,6 +332,7 @@ def main(
     logger: Union[logging.Logger] = None,
     stream: Optional[TextIO] = None,
 ) -> Union[int, bool, Type[Exception]]:
+    parser = get_parser()
 
     if logger is None:
         logger = get_logger()
@@ -336,7 +342,7 @@ def main(
     success = 0
 
     try:
-        args = parse_arguments(argv)
+        args = parse_arguments(parser, argv)
     except ArgumentError as e:
         return e
 
@@ -421,4 +427,4 @@ def main(
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:], get_logger(), sys.stderr, os.environ))
+    sys.exit(main(sys.argv[1:], get_logger(), sys.stderr))

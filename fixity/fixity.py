@@ -1,3 +1,4 @@
+import dataclasses
 import io
 import json
 import logging
@@ -25,6 +26,17 @@ ERROR_LOG_LEVEL = 100
 SUCCESS_LOG_LEVEL = 200
 
 
+@dataclasses.dataclass
+class FixityArgs:
+    command: str
+    aip: str
+    debug: bool
+    throttle: int
+    force_local: bool
+    timestamps: bool
+    sort: bool
+
+
 class ArgumentError(Exception):
     pass
 
@@ -34,7 +46,7 @@ def validate_arguments(args):
         raise ArgumentError("An AIP UUID must be specified when scanning a single AIP")
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Optional[List[str]]) -> FixityArgs:
     parser = ArgumentParser()
     parser.add_argument("command", choices=["scan", "scanall"], help="Command to run.")
     parser.add_argument("aip", nargs="?", help="If 'scan', UUID of the AIP to scan")
@@ -65,7 +77,7 @@ def parse_arguments(argv):
     args = parser.parse_args(argv)
 
     validate_arguments(args)
-    return args
+    return FixityArgs(**vars(args))
 
 
 def _get_environment_variable(var):
@@ -75,7 +87,7 @@ def _get_environment_variable(var):
         raise ArgumentError(f"Missing environment variable: {e.args[0]}")
 
 
-def fetch_environment_variables(namespace):
+def fetch_environment_variables(namespace: List[str]) -> None:
     namespace.ss_url = _get_environment_variable("STORAGE_SERVICE_URL")
     if not namespace.ss_url.endswith("/"):
         namespace.ss_url = namespace.ss_url + "/"
@@ -315,6 +327,7 @@ def main(
     logger: Union[logging.Logger] = None,
     stream: Optional[TextIO] = None,
 ) -> Union[int, bool, Type[Exception]]:
+
     if logger is None:
         logger = get_logger()
     if stream is None:
@@ -349,7 +362,7 @@ def main(
         auth = ()
 
     try:
-        report_url = args.report_url if ("report_url" in args) else None
+        report_url = args.report_url if ("report_url" in args.__dict__) else None
 
         if args.command == "scanall":
             status = scanall(
@@ -408,4 +421,4 @@ def main(
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:], get_logger(), sys.stderr))
+    sys.exit(main(sys.argv[1:], get_logger(), sys.stderr, os.environ))

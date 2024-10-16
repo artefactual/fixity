@@ -9,6 +9,7 @@ from argparse import ArgumentParser
 from datetime import datetime
 from datetime import timezone
 from time import sleep
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import TextIO
@@ -35,6 +36,16 @@ class FixityArgs:
     force_local: bool
     timestamps: bool
     sort: bool
+
+
+@dataclasses.dataclass
+class EnvironmentArgs:
+    STORAGE_SERVICE_URL: str
+    STORAGE_SERVICE_USER: str
+    STORAGE_SERVICE_KEY: str
+    REPORT_URL: str
+    REPORT_USERNAME: str
+    REPORT_PASSWORD: str
 
 
 class ArgumentError(Exception):
@@ -92,25 +103,27 @@ def _get_environment_variable(var):
         raise ArgumentError(f"Missing environment variable: {e.args[0]}")
 
 
-def fetch_environment_variables(namespace: List[str]) -> None:
-    namespace.ss_url = _get_environment_variable("STORAGE_SERVICE_URL")
-    if not namespace.ss_url.endswith("/"):
-        namespace.ss_url = namespace.ss_url + "/"
-    namespace.ss_user = _get_environment_variable("STORAGE_SERVICE_USER")
-    namespace.ss_key = _get_environment_variable("STORAGE_SERVICE_KEY")
+def fetch_environment_variables(env: Dict[str, str]) -> EnvironmentArgs:
+    env["ss_url"] = _get_environment_variable("STORAGE_SERVICE_URL")
+    if not env["ss_url"].endswith("/"):
+        env["ss_url"] = env["STORAGE_SERVICE_URL"] + "/"
+    env["ss_user"] = _get_environment_variable("STORAGE_SERVICE_USER")
+    env["ss_key"] = _get_environment_variable("STORAGE_SERVICE_KEY")
 
-    if "REPORT_URL" in os.environ:
-        namespace.report_url = _get_environment_variable("REPORT_URL")
-        if not namespace.report_url.endswith("/"):
-            namespace.report_url = namespace.report_url + "/"
+    if "REPORT_URL" in env:
+        env["report_url"] = env.get("REPORT_URL")
+        if not env["report_url"].endswith("/"):
+            env["report_url"] = env["report_url"] + "/"
 
     # These two parameters are optional; not all reporting services
     # require any authentication.
     try:
-        namespace.report_user = os.environ["REPORT_USERNAME"]
-        namespace.report_pass = os.environ["REPORT_PASSWORD"]
+        env["report_user"] = env.get("REPORT_USERNAME")
+        env["report_pass"] = env.get("REPORT_PASSWORD")
     except KeyError:
-        namespace.report_user = namespace.report_pass = None
+        env["report_user"] = env["report_pass"] = ""
+
+    return EnvironmentArgs(**vars(env))
 
 
 def scan_message(aip_uuid: str, status: bool, message: str) -> str:
@@ -331,13 +344,17 @@ def main(
     argv: Optional[List[str]] = None,
     logger: Union[logging.Logger] = None,
     stream: Optional[TextIO] = None,
+    env: Optional[Dict[str, str]] = None,
 ) -> Union[int, bool, Type[Exception]]:
+
     parser = get_parser()
 
     if logger is None:
         logger = get_logger()
     if stream is None:
         stream = sys.stderr
+    if env is None:
+        env = os.environ
 
     success = 0
 
@@ -347,7 +364,7 @@ def main(
         return e
 
     try:
-        fetch_environment_variables(args)
+        env_args = fetch_environment_variables(env)
     except ArgumentError as e:
         return e
 
@@ -362,19 +379,19 @@ def main(
 
     status = False
 
-    if args.report_user and args.report_pass:
-        auth = (args.report_user, args.report_pass)
+    if env_args["report_user"] and env_args["report_pass"]:
+        auth = (env_args["report_user"], env_args["report_pass"])
     else:
         auth = ()
 
     try:
-        report_url = args.report_url if ("report_url" in args.__dict__) else None
+        report_url = env_args["report_url"] if ("report_url" in env_args) else None
 
         if args.command == "scanall":
             status = scanall(
-                args.ss_url,
-                args.ss_user,
-                args.ss_key,
+                env_args["ss_url"],
+                env_args["ss_user"],
+                env_args["ss_key"],
                 session,
                 logger,
                 report_url=report_url,
@@ -386,9 +403,9 @@ def main(
             session_id = str(uuid4())
             status = scan(
                 args.aip,
-                args.ss_url,
-                args.ss_user,
-                args.ss_key,
+                env_args["ss_url"],
+                env_args["ss_user"],
+                env_args["ss_key"],
                 session,
                 logger,
                 report_url=report_url,
@@ -427,4 +444,4 @@ def main(
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:], get_logger(), sys.stderr))
+    sys.exit(main(sys.argv[1:], get_logger(), sys.stderr, os.environ))

@@ -14,6 +14,7 @@ from fixity import fixity
 from fixity import reporting
 from fixity.models import Report
 from fixity.models import Session
+from fixity.storage_service import StorageServiceError
 
 SESSION = Session()
 STORAGE_SERVICE_URL = "http://localhost:8000/"
@@ -634,3 +635,199 @@ def test_scanall_if_sort_argument_is_passed(
             params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
         ),
     ]
+
+
+@mock.patch("requests.get")
+def test_main_handles_exception_if_environment_key_is_missing(
+    _get: mock.Mock, mock_check_fixity: List[mock.Mock]
+) -> None:
+    _get.side_effect = mock_check_fixity
+    aip_id = uuid.uuid4()
+    stream = io.StringIO()
+
+    fixity.main(["scan", str(aip_id)], stream=stream)
+
+    assert fixity.ArgumentError("Missing environment variable: STORAGE_SERVICE_URL")
+
+
+@mock.patch("requests.get")
+def test_scanall_if_sort_argument_is_passed(
+    _get: mock.Mock, environment: None, mock_check_fixity: List[mock.Mock]
+) -> None:
+    aip1_uuid = str(uuid.uuid4())
+    aip2_uuid = str(uuid.uuid4())
+    aip3_uuid = str(uuid.uuid4())
+    aip4_uuid = str(uuid.uuid4())
+    _get.side_effect = [
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {
+                    "meta": {"next": None},
+                    "objects": [
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": aip1_uuid,
+                        },
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": aip2_uuid,
+                        },
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": aip3_uuid,
+                        },
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": aip4_uuid,
+                        },
+                    ],
+                },
+            },
+            spec=requests.Response,
+        ),
+        *mock_check_fixity,
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {},
+            },
+            spec=requests.Response,
+        ),
+        mock.Mock(
+            **{
+                "status_code": 500,
+                "json.return_value": {
+                    "success": None,
+                    "message": "",
+                    "failures": {
+                        "files": {"missing": [], "changed": [], "untracked": []}
+                    },
+                    "timestamp": None,
+                },
+            },
+            spec=requests.Response,
+        ),
+        *mock_check_fixity,
+        mock.Mock(
+            **{
+                "status_code": 200,
+                "json.return_value": {},
+            },
+            spec=requests.Response,
+        ),
+        mock.Mock(
+            **{
+                "status_code": 401,
+                "json.return_value": {
+                    "success": None,
+                    "message": "",
+                    "failures": {
+                        "files": {"missing": [], "changed": [], "untracked": []}
+                    },
+                    "timestamp": None,
+                },
+            },
+            spec=requests.Response,
+        ),
+    ]
+
+    stream = io.StringIO()
+
+    response = fixity.main(["scanall", "--sort"], stream=stream)
+
+    assert response == 1
+
+    stream.seek(0)
+    assert [line.rstrip() for line in stream.readlines()] == [
+        f'Storage service at "{STORAGE_SERVICE_URL}" encountered an internal error while scanning AIP {aip2_uuid}',
+        f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while scanning AIP {aip4_uuid}',
+        f"Fixity scan succeeded for AIP: {aip1_uuid}",
+        f"Fixity scan succeeded for AIP: {aip3_uuid}",
+        "Successfully scanned 4 AIPs",
+    ]
+
+    assert _get.mock_calls == [
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/",
+            params={"username": "test", "api_key": "test"},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip1_uuid}/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip1_uuid}/check_fixity/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip2_uuid}/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip2_uuid}/check_fixity/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip3_uuid}/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip3_uuid}/check_fixity/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip4_uuid}/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+        mock.call(
+            f"{STORAGE_SERVICE_URL}api/v2/file/{aip4_uuid}/check_fixity/",
+            params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
+        ),
+    ]
+
+
+@mock.patch("requests.get")
+def test_scanall_adds_trailing_slash_in_storage_service_url(
+    _get: mock.Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
+    monkeypatch.setenv("STORAGE_SERVICE_USER", "")
+    monkeypatch.setenv("STORAGE_SERVICE_KEY", "")
+    aip_id1 = str(uuid.uuid4())
+    aip_id2 = str(uuid.uuid4())
+    _get.side_effect = [
+        mock.Mock(
+            **{
+                "status_code": 401,
+                "json.return_value": {
+                    "meta": {"next": None},
+                    "objects": [
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": f"{aip_id1}",
+                        },
+                        {
+                            "package_type": "AIP",
+                            "status": "UPLOADED",
+                            "uuid": f"{aip_id2}",
+                        },
+                    ],
+                },
+            },
+            spec=requests.Response,
+            side_effect=ConnectionError,
+        )
+    ]
+    stream = io.StringIO()
+
+    fixity.main(["scanall"], stream=stream)
+
+    assert StorageServiceError(
+        f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while requesting AIPs'
+    )

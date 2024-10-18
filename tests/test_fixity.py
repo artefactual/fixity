@@ -652,11 +652,8 @@ def test_main_handles_exception_if_environment_key_is_missing(
 
 @mock.patch("requests.get")
 def test_scanall_handles_exception_if_storage_service_is_not_connected(
-    _get: mock.Mock, monkeypatch: pytest.MonkeyPatch
+    _get: mock.Mock, environment: None
 ) -> None:
-    monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
-    monkeypatch.setenv("STORAGE_SERVICE_USER", "")
-    monkeypatch.setenv("STORAGE_SERVICE_KEY", "")
     aip_id1 = str(uuid.uuid4())
     aip_id2 = str(uuid.uuid4())
     _get.side_effect = [
@@ -687,6 +684,6 @@ def test_scanall_handles_exception_if_storage_service_is_not_connected(
 
     fixity.main(["scanall"], stream=stream)
 
-    assert storage_service.StorageServiceError(  # type: ignore
+    assert storage_service.StorageServiceError(
         f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while requesting AIPs'
     )

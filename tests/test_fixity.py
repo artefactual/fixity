@@ -12,9 +12,9 @@ import requests
 
 from fixity import fixity
 from fixity import reporting
+from fixity import storage_service
 from fixity.models import Report
 from fixity.models import Session
-from fixity.storage_service import StorageServiceError
 
 SESSION = Session()
 STORAGE_SERVICE_URL = "http://localhost:8000/"
@@ -651,7 +651,7 @@ def test_main_handles_exception_if_environment_key_is_missing(
 
 
 @mock.patch("requests.get")
-def test_scanall_handles_exception_if_storage_serrvice_is_not_connected(
+def test_scanall_handles_exception_if_storage_service_is_not_connected(
     _get: mock.Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("STORAGE_SERVICE_URL", STORAGE_SERVICE_URL)
@@ -687,6 +687,6 @@ def test_scanall_handles_exception_if_storage_serrvice_is_not_connected(
 
     fixity.main(["scanall"], stream=stream)
 
-    assert StorageServiceError(
+    assert storage_service.StorageServiceError(  # type: ignore
         f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while requesting AIPs'
     )

@@ -678,10 +678,14 @@ def test_main_verifies_urls_with_trailing_slash(
     mock_check_fixity: List[mock.Mock],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    _get.side_effect = mock_check_fixity
+    _get.side_effect = [
+        mock.Mock(**{"status_code": 200}, spec=requests.Response),
+        mock.Mock(**{"status_code": 401}, spec=requests.Response),
+    ]
     aip_id = uuid.uuid4()
     stream = io.StringIO()
-    monkeypatch.setenv("STORAGE_SERVICE_URL", "http://foo")
+    ss_url = "http://foo"
+    monkeypatch.setenv("STORAGE_SERVICE_URL", ss_url)
     monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
     monkeypatch.setenv("STORAGE_SERVICE_KEY", STORAGE_SERVICE_KEY)
     report_url = "http://bar"
@@ -691,14 +695,13 @@ def test_main_verifies_urls_with_trailing_slash(
 
     response = fixity.main(["scan", str(aip_id)], stream=stream)
 
-    assert response == 0
+    assert response is None
 
     _assert_stream_content_matches(
         stream,
         [
             f"Unable to POST pre-scan report to {report_url}/",
-            f"Fixity scan succeeded for AIP: {aip_id}",
-            f"Unable to POST report for AIP {aip_id} to remote service",
+            f'Storage service at "{ss_url}/" failed authentication while scanning AIP {aip_id}',
         ],
     )
 

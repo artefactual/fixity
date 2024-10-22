@@ -12,9 +12,10 @@ import requests
 
 from fixity import fixity
 from fixity import reporting
-from fixity import storage_service
+from fixity.fixity import ArgumentError
 from fixity.models import Report
 from fixity.models import Session
+from fixity.storage_service import StorageServiceError
 
 SESSION = Session()
 STORAGE_SERVICE_URL = "http://localhost:8000/"
@@ -644,46 +645,30 @@ def test_main_handles_exception_if_environment_key_is_missing(
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
     stream = io.StringIO()
+    response = fixity.main(["scan", str(aip_id)], stream=stream)
 
-    fixity.main(["scan", str(aip_id)], stream=stream)
-
-    assert fixity.ArgumentError("Missing environment variable: STORAGE_SERVICE_URL")
+    assert str(response) == "Missing environment variable: STORAGE_SERVICE_URL"
+    assert isinstance(response, ArgumentError)
 
 
 @mock.patch("requests.get")
 def test_scanall_handles_exception_if_storage_service_is_not_connected(
     _get: mock.Mock, environment: None
 ) -> None:
-    aip_id1 = str(uuid.uuid4())
-    aip_id2 = str(uuid.uuid4())
     _get.side_effect = [
         mock.Mock(
             **{
                 "status_code": 401,
-                "json.return_value": {
-                    "meta": {"next": None},
-                    "objects": [
-                        {
-                            "package_type": "AIP",
-                            "status": "UPLOADED",
-                            "uuid": f"{aip_id1}",
-                        },
-                        {
-                            "package_type": "AIP",
-                            "status": "UPLOADED",
-                            "uuid": f"{aip_id2}",
-                        },
-                    ],
-                },
             },
             spec=requests.Response,
-            side_effect=ConnectionError,
         )
     ]
     stream = io.StringIO()
 
-    fixity.main(["scanall"], stream=stream)
+    response = fixity.main(["scanall"], stream=stream)
 
-    assert storage_service.StorageServiceError(
-        f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while requesting AIPs'
+    assert (
+        str(response)
+        == f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while requesting AIPs'
     )
+    assert isinstance(response, StorageServiceError)

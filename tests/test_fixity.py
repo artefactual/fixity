@@ -643,16 +643,15 @@ def test_main_handles_exception_if_environment_key_is_missing(
     _get: mock.Mock, mock_check_fixity: List[mock.Mock]
 ) -> None:
     _get.side_effect = mock_check_fixity
-    aip_id = uuid.uuid4()
-    stream = io.StringIO()
-    response = fixity.main(["scan", str(aip_id)], stream=stream)
+
+    response = fixity.main(["scan", str(uuid.uuid4())])
 
     assert str(response) == "Missing environment variable: STORAGE_SERVICE_URL"
     assert isinstance(response, ArgumentError)
 
 
 @mock.patch("requests.get")
-def test_scanall_handles_exception_if_storage_service_is_not_connected(
+def test_scanall_handles_exception_if_storage_service_raises_exception(
     _get: mock.Mock, environment: None
 ) -> None:
     _get.side_effect = [
@@ -663,12 +662,49 @@ def test_scanall_handles_exception_if_storage_service_is_not_connected(
             spec=requests.Response,
         )
     ]
-    stream = io.StringIO()
 
-    response = fixity.main(["scanall"], stream=stream)
+    response = fixity.main(["scanall"])
 
     assert (
         str(response)
         == f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while requesting AIPs'
     )
     assert isinstance(response, StorageServiceError)
+
+
+@mock.patch("requests.get")
+def test_main_verifies_urls_with_trailing_slash(
+    _get: mock.Mock,
+    mock_check_fixity: List[mock.Mock],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _get.side_effect = mock_check_fixity
+    aip_id = uuid.uuid4()
+    stream = io.StringIO()
+    monkeypatch.setenv("STORAGE_SERVICE_URL", "http://foo")
+    monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
+    monkeypatch.setenv("STORAGE_SERVICE_KEY", STORAGE_SERVICE_KEY)
+    report_url = "http://bar"
+    monkeypatch.setenv("REPORT_URL", report_url)
+    monkeypatch.setenv("REPORT_USERNAME", "test")
+    monkeypatch.setenv("REPORT_PASSWORD", "test123")
+
+    response = fixity.main(["scan", str(aip_id)], stream=stream)
+
+    assert response == 0
+
+    _assert_stream_content_matches(
+        stream,
+        [
+            f"Unable to POST pre-scan report to {report_url}/",
+            f"Fixity scan succeeded for AIP: {aip_id}",
+            f"Unable to POST report for AIP {aip_id} to remote service",
+        ],
+    )
+
+
+def test_main_validate_arguments() -> None:
+    response = fixity.main(["scan"])
+
+    assert str(response) == "An AIP UUID must be specified when scanning a single AIP"
+    assert isinstance(response, ArgumentError)

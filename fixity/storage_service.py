@@ -1,7 +1,6 @@
 import calendar
 import json
 from datetime import datetime
-from typing import Dict
 
 import requests
 from sqlalchemy.orm.exc import NoResultFound
@@ -24,7 +23,7 @@ class StorageServiceError(Exception):
     itself will not return, but the caller still needs access to it.
     """
 
-    def __init__(self, message: str, report: Dict[str, str] = None) -> None:
+    def __init__(self, message, report=None):
         self.report = report
         super().__init__(message)
 

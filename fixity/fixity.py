@@ -312,9 +312,9 @@ def get_handler(stream, timestamps, log_level=None):
 
 def main(
     argv: Optional[List[str]] = None,
-    logger: Union[logging.Logger] = None,
+    logger: Optional[logging.Logger] = None,
     stream: Optional[TextIO] = None,
-) -> Union[int, bool, Type[Exception]]:
+) -> Optional[Union[int, bool, Type[Exception]]]:
     if logger is None:
         logger = get_logger()
     if stream is None:

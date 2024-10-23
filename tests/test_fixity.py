@@ -675,7 +675,6 @@ def test_scanall_handles_exception_if_storage_service_raises_exception(
 @mock.patch("requests.get")
 def test_main_verifies_urls_with_trailing_slash(
     _get: mock.Mock,
-    mock_check_fixity: List[mock.Mock],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _get.side_effect = [
@@ -706,7 +705,7 @@ def test_main_verifies_urls_with_trailing_slash(
     )
 
 
-def test_main_validate_arguments() -> None:
+def test_main_validates_arguments() -> None:
     response = fixity.main(["scan"])
 
     assert str(response) == "An AIP UUID must be specified when scanning a single AIP"

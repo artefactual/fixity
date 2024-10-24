@@ -12,8 +12,10 @@ import requests
 
 from fixity import fixity
 from fixity import reporting
+from fixity.fixity import ArgumentError
 from fixity.models import Report
 from fixity.models import Session
+from fixity.storage_service import StorageServiceError
 
 SESSION = Session()
 STORAGE_SERVICE_URL = "http://localhost:8000/"
@@ -634,3 +636,77 @@ def test_scanall_if_sort_argument_is_passed(
             params={"username": STORAGE_SERVICE_USER, "api_key": STORAGE_SERVICE_KEY},
         ),
     ]
+
+
+@mock.patch("requests.get")
+def test_main_handles_exception_if_environment_key_is_missing(
+    _get: mock.Mock, mock_check_fixity: List[mock.Mock]
+) -> None:
+    _get.side_effect = mock_check_fixity
+
+    response = fixity.main(["scan", str(uuid.uuid4())])
+
+    assert str(response) == "Missing environment variable: STORAGE_SERVICE_URL"
+    assert isinstance(response, ArgumentError)
+
+
+@mock.patch("requests.get")
+def test_scanall_handles_exception_if_storage_service_raises_exception(
+    _get: mock.Mock, environment: None
+) -> None:
+    _get.side_effect = [
+        mock.Mock(
+            **{
+                "status_code": 401,
+            },
+            spec=requests.Response,
+        )
+    ]
+
+    response = fixity.main(["scanall"])
+
+    assert (
+        str(response)
+        == f'Storage service at "{STORAGE_SERVICE_URL}" failed authentication while requesting AIPs'
+    )
+    assert isinstance(response, StorageServiceError)
+
+
+@mock.patch("requests.get")
+def test_main_verifies_urls_with_trailing_slash(
+    _get: mock.Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _get.side_effect = [
+        mock.Mock(**{"status_code": 200}, spec=requests.Response),
+        mock.Mock(**{"status_code": 401}, spec=requests.Response),
+    ]
+    aip_id = uuid.uuid4()
+    stream = io.StringIO()
+    ss_url = "http://foo"
+    monkeypatch.setenv("STORAGE_SERVICE_URL", ss_url)
+    monkeypatch.setenv("STORAGE_SERVICE_USER", STORAGE_SERVICE_USER)
+    monkeypatch.setenv("STORAGE_SERVICE_KEY", STORAGE_SERVICE_KEY)
+    report_url = "http://bar"
+    monkeypatch.setenv("REPORT_URL", report_url)
+    monkeypatch.setenv("REPORT_USERNAME", "test")
+    monkeypatch.setenv("REPORT_PASSWORD", "test123")
+
+    response = fixity.main(["scan", str(aip_id)], stream=stream)
+
+    assert response is None
+
+    _assert_stream_content_matches(
+        stream,
+        [
+            f"Unable to POST pre-scan report to {report_url}/",
+            f'Storage service at "{ss_url}/" failed authentication while scanning AIP {aip_id}',
+        ],
+    )
+
+
+def test_main_validates_arguments() -> None:
+    response = fixity.main(["scan"])
+
+    assert str(response) == "An AIP UUID must be specified when scanning a single AIP"
+    assert isinstance(response, ArgumentError)

@@ -8,10 +8,8 @@ from argparse import ArgumentParser
 from datetime import datetime
 from datetime import timezone
 from time import sleep
-from typing import List
 from typing import Optional
 from typing import TextIO
-from typing import Type
 from typing import Union
 from uuid import uuid4
 
@@ -311,10 +309,10 @@ def get_handler(stream, timestamps, log_level=None):
 
 
 def main(
-    argv: Optional[List[str]] = None,
+    argv: Optional[list[str]] = None,
     logger: Optional[logging.Logger] = None,
     stream: Optional[TextIO] = None,
-) -> Optional[Union[int, bool, Type[Exception]]]:
+) -> Optional[Union[int, bool, type[Exception]]]:
     if logger is None:
         logger = get_logger()
     if stream is None:

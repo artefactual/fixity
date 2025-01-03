@@ -3,7 +3,6 @@ import json
 import uuid
 from datetime import datetime
 from datetime import timezone
-from typing import List
 from typing import TextIO
 from unittest import mock
 
@@ -45,7 +44,7 @@ def environment(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def mock_check_fixity() -> List[mock.Mock]:
+def mock_check_fixity() -> list[mock.Mock]:
     return [
         mock.Mock(
             **{
@@ -58,14 +57,14 @@ def mock_check_fixity() -> List[mock.Mock]:
     ]
 
 
-def _assert_stream_content_matches(stream: TextIO, expected: List[str]) -> None:
+def _assert_stream_content_matches(stream: TextIO, expected: list[str]) -> None:
     stream.seek(0)
     assert [line.strip() for line in stream.readlines()] == expected
 
 
 @mock.patch("requests.get")
 def test_scan(
-    _get: mock.Mock, environment: None, mock_check_fixity: List[mock.Mock]
+    _get: mock.Mock, environment: None, mock_check_fixity: list[mock.Mock]
 ) -> None:
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
@@ -95,7 +94,7 @@ def test_scan_if_timestamps_argument_is_passed(
     _get: mock.Mock,
     time: mock.Mock,
     environment: None,
-    mock_check_fixity: List[mock.Mock],
+    mock_check_fixity: list[mock.Mock],
 ) -> None:
     _get.side_effect = mock_check_fixity
     aip_id = uuid.uuid4()
@@ -140,7 +139,7 @@ def test_scan_if_report_url_exists(
     utcnow: mock.Mock,
     uuid4: mock.Mock,
     environment: None,
-    mock_check_fixity: List[mock.Mock],
+    mock_check_fixity: list[mock.Mock],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     uuid4.return_value = expected_uuid = uuid.uuid4()
@@ -215,7 +214,7 @@ def test_scan_handles_exceptions_if_report_url_exists(
     _post: mock.Mock,
     _get: mock.Mock,
     environment: None,
-    mock_check_fixity: List[mock.Mock],
+    mock_check_fixity: list[mock.Mock],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _get.side_effect = mock_check_fixity
@@ -328,7 +327,7 @@ def test_scan_message(status: bool, error_message: str) -> None:
     "requests.get",
 )
 def test_scanall(
-    _get: mock.Mock, environment: None, mock_check_fixity: List[mock.Mock]
+    _get: mock.Mock, environment: None, mock_check_fixity: list[mock.Mock]
 ) -> None:
     aip1_uuid = str(uuid.uuid4())
     aip2_uuid = str(uuid.uuid4())
@@ -499,7 +498,7 @@ def test_main_handles_exceptions_if_scanall_fails(
 
 @mock.patch("requests.get")
 def test_scanall_if_sort_argument_is_passed(
-    _get: mock.Mock, environment: None, mock_check_fixity: List[mock.Mock]
+    _get: mock.Mock, environment: None, mock_check_fixity: list[mock.Mock]
 ) -> None:
     aip1_uuid = str(uuid.uuid4())
     aip2_uuid = str(uuid.uuid4())
@@ -640,7 +639,7 @@ def test_scanall_if_sort_argument_is_passed(
 
 @mock.patch("requests.get")
 def test_main_handles_exception_if_environment_key_is_missing(
-    _get: mock.Mock, mock_check_fixity: List[mock.Mock]
+    _get: mock.Mock, mock_check_fixity: list[mock.Mock]
 ) -> None:
     _get.side_effect = mock_check_fixity
 

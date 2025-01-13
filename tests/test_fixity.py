@@ -88,11 +88,13 @@ def test_scan(
     ]
 
 
+@mock.patch("time.time_ns")
 @mock.patch("time.time")
 @mock.patch("requests.get")
 def test_scan_if_timestamps_argument_is_passed(
     _get: mock.Mock,
     time: mock.Mock,
+    time_ns: mock.Mock,
     environment: None,
     mock_check_fixity: list[mock.Mock],
 ) -> None:
@@ -100,6 +102,7 @@ def test_scan_if_timestamps_argument_is_passed(
     aip_id = uuid.uuid4()
     timestamp = 1514775600
     time.return_value = timestamp
+    time_ns.return_value = timestamp * (10**9)
     stream = io.StringIO()
 
     response = fixity.main(["scan", str(aip_id), "--timestamps"], stream=stream)

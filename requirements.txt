@@ -4,19 +4,19 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements.txt pyproject.toml
 #
-certifi==2024.12.14
+certifi==2025.4.26
     # via requests
-charset-normalizer==3.4.1
+charset-normalizer==3.4.2
     # via requests
-greenlet==3.1.1
+greenlet==3.2.2
     # via sqlalchemy
 idna==3.10
     # via requests
 requests==2.32.3
     # via fixity (pyproject.toml)
-sqlalchemy==2.0.37
+sqlalchemy==2.0.41
     # via fixity (pyproject.toml)
-typing-extensions==4.12.2
+typing-extensions==4.13.2
     # via sqlalchemy
-urllib3==2.3.0
+urllib3==2.4.0
     # via requests

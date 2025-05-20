@@ -11,6 +11,7 @@ jobs:
     name: "Test Python ${{ matrix.python-version }}"
     runs-on: "ubuntu-24.04"
     strategy:
+      fail-fast: false
       matrix:
         python-version: [
           "3.9",
@@ -36,7 +37,7 @@ jobs:
           pip install tox
       - name: "Run tox"
         run: |
-          tox -e py3 -- --cov fixity --cov-config .coveragerc --cov-report xml:coverage.xml
+          tox -e py -- --cov fixity --cov-report xml:coverage.xml
       - name: "Upload coverage report"
         if: github.repository == 'artefactual/fixity'
         uses: "codecov/codecov-action@v4"
@@ -56,6 +57,7 @@ jobs:
         uses: "actions/setup-python@v5"
         with:
           python-version: "3.x"
+          cache: "pip"
           cache-dependency-path: |
             requirements.txt
             requirements-dev.txt

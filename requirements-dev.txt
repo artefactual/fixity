@@ -16,9 +16,9 @@ coverage[toml]==7.12.0
     # via
     #   fixity (pyproject.toml)
     #   pytest-cov
-exceptiongroup==1.3.0
+exceptiongroup==1.3.1
     # via pytest
-greenlet==3.2.4
+greenlet==3.3.0
     # via sqlalchemy
 idna==3.11
     # via requests
@@ -48,7 +48,7 @@ pytest-cov==7.0.0
     # via fixity (pyproject.toml)
 requests==2.32.5
     # via fixity (pyproject.toml)
-ruff==0.14.5
+ruff==0.14.8
     # via fixity (pyproject.toml)
 sqlalchemy==2.0.44
     # via fixity (pyproject.toml)
@@ -62,7 +62,7 @@ typing-extensions==4.15.0
     # via
     #   exceptiongroup
     #   sqlalchemy
-urllib3==2.5.0
+urllib3==2.6.0
     # via requests
 wheel==0.45.1
     # via pip-tools

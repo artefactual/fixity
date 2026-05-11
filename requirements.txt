@@ -8,15 +8,15 @@ certifi==2026.4.22
     # via requests
 charset-normalizer==3.4.7
     # via requests
-greenlet==3.4.0
+greenlet==3.5.0
     # via sqlalchemy
-idna==3.13
+idna==3.14
     # via requests
-requests==2.33.1
+requests==2.34.0
     # via fixity (pyproject.toml)
 sqlalchemy==2.0.49
     # via fixity (pyproject.toml)
 typing-extensions==4.15.0
     # via sqlalchemy
-urllib3==2.6.3
+urllib3==2.7.0
     # via requests

@@ -2,9 +2,9 @@
 **/fixity.db
 *~
 .coverage
+coverage.xml
 
-# Tox files
-.tox/
+.venv/
 
 # Build output
 build/

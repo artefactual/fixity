@@ -415,46 +415,55 @@ To set up this repository for local development:
    cd fixity
    ```
 
-3. Create a virtual environment with a recent version of Python:
+3. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and
+   synchronize the locked project and development dependencies:
 
    ```shell
-   python3 -m venv .venv
+   make sync
    ```
 
-4. Activate the virtual environment:
+   The Makefile exposes the common workflows:
 
-   ```shell
-   source .venv/bin/activate
-   ```
+   - `make sync-runtime` installs only the project and runtime dependencies.
+   - `make sync` also installs development tools.
+   - `make lock-check` verifies that `uv.lock` matches `pyproject.toml`.
+   - `make lock` refreshes the lock without upgrading existing versions,
+     while `make upgrade` upgrades all dependencies.
+   - `make requirements` regenerates `requirements.txt` from `uv.lock`.
+   - `make requirements-check` verifies that the committed export is current.
+   - `make check` verifies the lock and runs all pre-commit checks.
+   - `make test PYTEST_ARGS="..."` runs pytest with optional arguments.
+   - `make package-check` builds and validates the distribution packages.
 
-5. Install the project in editable mode passing the development extra:
+   Declare runtime dependencies in `project.dependencies` and development
+   dependencies in `dependency-groups.dev` in `pyproject.toml`. The committed
+   `uv.lock` is the authoritative dependency lock. `requirements.txt` is a
+   generated export retained for the deployment steps above and for the
+   Ansible role. Do not edit it by hand; run `make requirements` after changing
+   the lock.
 
-   ```shell
-   pip install -e .[dev]
-   ```
+   CI verifies this export separately from linting. Dependabot uv updates do
+   not run pre-commit hooks, so a maintainer must run `make requirements` and
+   commit the result on those pull requests. Without uv, upgrade pip to 25.1
+   or newer and run `pip install -e . --group dev`.
+
+   The default interpreter is pinned in `.python-version`. Local uv commands
+   and the `setup-uv` GitHub Action discover it automatically; CI overrides it
+   to exercise every supported Python version. `tool.uv.required-version`
+   declares the minimum supported uv version and accepts newer installations.
 
 ### Tests
-
-This project uses `tox` to manage and run tests with `pytest`. You can find
-the configuration details in the `[tool.tox]` section of the `pyproject.toml`
-file.
-
-You can install `tox` in your virtual environment:
-
-```shell
-pip install tox
-```
 
 Run all the tests this way:
 
 ```shell
-tox -e py
+make test
 ```
 
 You can pass options to `pytest`:
 
 ```shell
-tox -e py -- -vvv -k "test_fixity"
+make test PYTEST_ARGS='-vvv -k "test_fixity"'
 ```
 
 ## Security

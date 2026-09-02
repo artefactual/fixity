@@ -1,7 +1,6 @@
 [build-system]
 requires = [
-  "setuptools>=68",
-  "wheel>=0.41",
+  "setuptools>=77",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -55,13 +54,25 @@ issues = "https://github.com/archivematica/Issues/issues"
 [project.scripts]
 fixity = "fixity.fixity:main"
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-  "coverage",
-  "pip-tools",
-  "pytest-cov",
+  "coverage[toml]",
+  "pre-commit",
   "pytest",
-  "ruff",
+  "pytest-cov",
+]
+
+[tool.uv]
+# Keep compatibility with newer global uv installations used by deployments.
+# GitHub Actions reads this value automatically via astral-sh/setup-uv.
+required-version = ">=0.11.30"
+# The version, readme and license are read from these files at build time, so
+# rebuild the editable install when any of them changes.
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "README.md" },
+  { file = "LICENSE" },
+  { file = "fixity/__init__.py" },
 ]
 
 [tool.setuptools.dynamic]
@@ -104,22 +115,6 @@ omit = [
   "tests/*",
 ]
 
-[tool.tox]
-legacy_tox_ini = """
-    [tox]
-    envlist = py, linting
-
-    [testenv]
-    skip_install = true
-    deps = -r {toxinidir}/requirements-dev.txt
-    commands =  pytest {posargs}
-
-    [testenv:linting]
-    basepython = python3
-    deps = pre-commit
-    commands = pre-commit run --all-files --show-diff-on-failure
-"""
-
 [tool.mypy]
 strict = true
 
@@ -135,4 +130,3 @@ module = [
     "tests.test_fixity",
 ]
 ignore_errors = false
-

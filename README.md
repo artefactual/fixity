@@ -2,7 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/fixity.svg)](https://pypi.python.org/pypi/fixity)
 [![GitHub CI](https://github.com/artefactual/fixity/actions/workflows/test.yml/badge.svg)](https://github.com/artefactual/fixity/actions/workflows/test.yml)
-[![codecov](https://codecov.io/gh/artefactual/fixity/branch/master/graph/badge.svg?token=wiga5iF7CK)](https://codecov.io/gh/artefactual/fixity)
+[![codecov](https://codecov.io/gh/artefactual/fixity/branch/main/graph/badge.svg?token=wiga5iF7CK)](https://codecov.io/gh/artefactual/fixity)
 
 ## Table of contents
 

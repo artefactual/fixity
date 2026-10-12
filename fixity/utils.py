@@ -1,5 +1,5 @@
+from datetime import UTC
 from datetime import datetime
-from datetime import timezone
 from uuid import UUID
 
 
@@ -32,4 +32,4 @@ def check_valid_uuid(uuid):
 
 
 def utcnow():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)

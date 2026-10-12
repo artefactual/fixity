@@ -1,8 +1,8 @@
 import io
 import json
 import uuid
+from datetime import UTC
 from datetime import datetime
-from datetime import timezone
 from typing import TextIO
 from unittest import mock
 
@@ -149,7 +149,7 @@ def test_scan_if_report_url_exists(
     _get.side_effect = mock_check_fixity
     monkeypatch.setenv("REPORT_URL", REPORT_URL)
     start_time = 1514775600
-    utcnow.return_value = datetime.fromtimestamp(start_time, timezone.utc)
+    utcnow.return_value = datetime.fromtimestamp(start_time, UTC)
     aip_id = uuid.uuid4()
     stream = io.StringIO()
 

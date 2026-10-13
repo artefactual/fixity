@@ -13,10 +13,8 @@ from fixity import fixity
 from fixity import reporting
 from fixity.fixity import ArgumentError
 from fixity.models import Report
-from fixity.models import Session
 from fixity.storage_service import StorageServiceError
 
-SESSION = Session()
 STORAGE_SERVICE_URL = "http://localhost:8000/"
 STORAGE_SERVICE_USER = "test"
 STORAGE_SERVICE_KEY = "test"

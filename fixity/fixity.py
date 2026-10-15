@@ -5,8 +5,8 @@ import os
 import sys
 import traceback
 from argparse import ArgumentParser
+from datetime import UTC
 from datetime import datetime
-from datetime import timezone
 from time import sleep
 from typing import TextIO
 from uuid import uuid4
@@ -277,7 +277,7 @@ def scanall(
 
 class UTCFormatter(logging.Formatter):
     def formatTime(self, record, datefmt=None):
-        return datetime.fromtimestamp(record.created, tz=timezone.utc).strftime(
+        return datetime.fromtimestamp(record.created, tz=UTC).strftime(
             "%Y-%m-%d %H:%M:%S %Z"
         )
 

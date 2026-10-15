@@ -1,8 +1,8 @@
 import io
 import json
 import uuid
+from datetime import UTC
 from datetime import datetime
-from datetime import timezone
 from typing import TextIO
 from unittest import mock
 
@@ -13,10 +13,8 @@ from fixity import fixity
 from fixity import reporting
 from fixity.fixity import ArgumentError
 from fixity.models import Report
-from fixity.models import Session
 from fixity.storage_service import StorageServiceError
 
-SESSION = Session()
 STORAGE_SERVICE_URL = "http://localhost:8000/"
 STORAGE_SERVICE_USER = "test"
 STORAGE_SERVICE_KEY = "test"
@@ -149,7 +147,7 @@ def test_scan_if_report_url_exists(
     _get.side_effect = mock_check_fixity
     monkeypatch.setenv("REPORT_URL", REPORT_URL)
     start_time = 1514775600
-    utcnow.return_value = datetime.fromtimestamp(start_time, timezone.utc)
+    utcnow.return_value = datetime.fromtimestamp(start_time, UTC)
     aip_id = uuid.uuid4()
     stream = io.StringIO()
 

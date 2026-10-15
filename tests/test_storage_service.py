@@ -1,17 +1,24 @@
 import json
+from collections.abc import Iterator
 from unittest import mock
 
 import pytest
 import requests
+import sqlalchemy.orm
 
 from fixity import storage_service
 from fixity.models import Session
 from fixity.utils import InvalidUUID
 
-SESSION = Session()
 STORAGE_SERVICE_URL = "http://localhost:8000/"
 STORAGE_SERVICE_USER = "test"
 STORAGE_SERVICE_KEY = "dfe83300db5f05f63157f772820bb028bd4d0e27"
+
+
+@pytest.fixture
+def session() -> Iterator[sqlalchemy.orm.Session]:
+    with Session() as session:
+        yield session
 
 
 # Single AIP
@@ -256,13 +263,15 @@ def test_get_all_aips_raises_with_bad_auth(_get):
         )
     ],
 )
-def test_successful_fixity_scan(_get):
+def test_successful_fixity_scan(
+    _get: mock.Mock, session: sqlalchemy.orm.Session
+) -> None:
     success, report = storage_service.scan_aip(
         "c8ebb75e-6b7a-46dd-a360-91d3753d7b72",
         STORAGE_SERVICE_URL,
         STORAGE_SERVICE_USER,
         STORAGE_SERVICE_KEY,
-        SESSION,
+        session,
     )
 
     assert success is True
@@ -298,13 +307,13 @@ def test_successful_fixity_scan(_get):
         )
     ],
 )
-def test_failed_fixity_scan(_get):
+def test_failed_fixity_scan(_get: mock.Mock, session: sqlalchemy.orm.Session) -> None:
     success, report = storage_service.scan_aip(
         "c8ebb75e-6b7a-46dd-a360-91d3753d7b72",
         STORAGE_SERVICE_URL,
         STORAGE_SERVICE_USER,
         STORAGE_SERVICE_KEY,
-        SESSION,
+        session,
     )
     assert success is False
     assert report.success is False
@@ -322,14 +331,16 @@ def test_failed_fixity_scan(_get):
 @mock.patch(
     "requests.get", side_effect=[mock.Mock(status_code=500, spec=requests.Response)]
 )
-def test_fixity_scan_raises_on_500(_get):
+def test_fixity_scan_raises_on_500(
+    _get: mock.Mock, session: sqlalchemy.orm.Session
+) -> None:
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.scan_aip(
             "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",
             STORAGE_SERVICE_URL,
             STORAGE_SERVICE_USER,
             STORAGE_SERVICE_KEY,
-            SESSION,
+            session,
         )
 
     assert "internal error" in str(ex.value)
@@ -338,27 +349,29 @@ def test_fixity_scan_raises_on_500(_get):
 @mock.patch(
     "requests.get", side_effect=[mock.Mock(status_code=504, spec=requests.Response)]
 )
-def test_fixity_scan_raises_on_non_200(_get):
+def test_fixity_scan_raises_on_non_200(
+    _get: mock.Mock, session: sqlalchemy.orm.Session
+) -> None:
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.scan_aip(
             "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",
             STORAGE_SERVICE_URL,
             STORAGE_SERVICE_USER,
             STORAGE_SERVICE_KEY,
-            SESSION,
+            session,
         )
 
     assert "returned 504" in str(ex.value)
 
 
-def test_fixity_scan_raises_on_invalid_url():
+def test_fixity_scan_raises_on_invalid_url(session: sqlalchemy.orm.Session) -> None:
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.scan_aip(
             "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",
             "http://foo",
             STORAGE_SERVICE_USER,
             STORAGE_SERVICE_KEY,
-            SESSION,
+            session,
         )
 
     error_msgs = (
@@ -372,14 +385,16 @@ def test_fixity_scan_raises_on_invalid_url():
 @mock.patch(
     "requests.get", side_effect=[mock.Mock(status_code=401, spec=requests.Response)]
 )
-def test_fixity_scan_raises_with_bad_auth(_get):
+def test_fixity_scan_raises_with_bad_auth(
+    _get: mock.Mock, session: sqlalchemy.orm.Session
+) -> None:
     with pytest.raises(storage_service.StorageServiceError) as ex:
         storage_service.scan_aip(
             "a7f2a05b-0fdf-42f1-a46c-4522a831cf17",
             STORAGE_SERVICE_URL,
             STORAGE_SERVICE_USER,
             "bad_key",
-            SESSION,
+            session,
         )
 
     assert "failed authentication" in str(ex.value)

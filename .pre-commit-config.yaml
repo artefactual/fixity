@@ -22,14 +22,14 @@ repos:
         (README)\.md
       )
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v2.4.0
+  rev: v2.4.1
   hooks:
     - id: mypy
       additional_dependencies:
         - pytest
         - types-requests
 - repo: https://github.com/astral-sh/uv-pre-commit
-  rev: 0.13.6
+  rev: 0.13.7
   hooks:
   - id: uv-export
     name: uv-export requirements.txt

@@ -8,7 +8,7 @@ idna==3.20
     # via requests
 requests==2.34.2
     # via fixity
-sqlalchemy==2.1.6
+sqlalchemy==2.1.8
     # via fixity
 typing-extensions==4.16.0
     # via sqlalchemy
